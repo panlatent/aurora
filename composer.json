@@ -1,0 +1,24 @@
+{
+    "name": "p7x/seven",
+    "description": "Seven is a modern Web application framework built using PHP7",
+    "type": "framework",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "panlatent",
+            "email": "panlatent@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=7.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Seven\\": "src/Seven/"
+        }
+    }
+}
