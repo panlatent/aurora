@@ -1,24 +1,27 @@
 {
-    "name": "seven/server",
-    "description": "A Http Server.",
-    "type": "application",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "panlatent",
-            "email": "panlatent@gmail.com"
-        }
-    ],
-    "minimum-stability": "dev",
-    "require": {
-        "php": ">=7.0"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "~4.0"
-    },
-    "autoload": {
-        "psr-4": {
-            "Seven\\Server\\": "src/Server/"
-        }
+  "name": "seven/server",
+  "description": "A Http Server.",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "panlatent",
+      "email": "panlatent@gmail.com"
     }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+    "php": ">=7.0",
+    "ext-pcntl": "*",
+    "ext-event": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "~4.0",
+    "panlatent/php-event-ide-helper": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "Seven\\Server\\": "src/Server/"
+    }
+  }
 }
