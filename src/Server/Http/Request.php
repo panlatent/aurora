@@ -7,7 +7,7 @@
  * @license https://opensource.org/licenses/MIT
  */
 
-namespace Seven\Server\Http;
+namespace Panlatent\Server\Http;
 
 class Request {
 

@@ -13,7 +13,7 @@ if ('cli' != php_sapi_name()) {
 
 require __DIR__ . '/vendor/autoload.php';
 
-$server = new Seven\Server\Http\Server();
+$server = new Panlatent\Server\Http\Server();
 $server->bind('127.0.0.1', 10011);
 $server->listen();
 $server->setOnRequest(function ($request, $response) {

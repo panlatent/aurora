@@ -7,7 +7,7 @@
  * @license https://opensource.org/licenses/MIT
  */
 
-namespace Seven\Server;
+namespace Panlatent\Server;
 
 class Daemon {
 

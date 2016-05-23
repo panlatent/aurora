@@ -7,7 +7,7 @@
  * @license https://opensource.org/licenses/MIT
  */
 
-namespace Seven\Server\Http;
+namespace Panlatent\Server\Http;
 
 class Response {
 
@@ -75,7 +75,7 @@ class Response {
 
     public function setRawBody($content)
     {
-        $this->body = $content;
+        $this->rawBody = $content;
 
         return $this;
     }

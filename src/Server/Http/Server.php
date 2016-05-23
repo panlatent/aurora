@@ -7,10 +7,10 @@
  * @license https://opensource.org/licenses/MIT
  */
 
-namespace Seven\Server\Http;
+namespace Panlatent\Server\Http;
 
-use Seven\Server\Exception;
-use Seven\Server\SocketServer;
+use Panlatent\Server\Exception;
+use Panlatent\Server\SocketServer;
 
 class Server extends SocketServer {
 

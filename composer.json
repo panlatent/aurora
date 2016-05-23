@@ -1,5 +1,5 @@
 {
-  "name": "seven/server",
+  "name": "panlatent/server",
   "description": "A Http Server.",
   "type": "library",
   "license": "MIT",
@@ -21,7 +21,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Seven\\Server\\": "src/Server/"
+      "Panlatent\\Server\\": "src/Server/"
     }
   }
 }
