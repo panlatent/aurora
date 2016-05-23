@@ -1,7 +1,7 @@
 {
-    "name": "p7x/seven",
-    "description": "Seven is a modern Web application framework built using PHP7",
-    "type": "framework",
+    "name": "seven/server",
+    "description": "A Http Server.",
+    "type": "application",
     "license": "MIT",
     "authors": [
         {
@@ -18,7 +18,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Seven\\": "src/Seven/"
+            "Seven\\Server\\": "src/Server/"
         }
     }
 }
