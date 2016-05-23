@@ -13,6 +13,32 @@ if ('cli' != php_sapi_name()) {
 
 require __DIR__ . '/vendor/autoload.php';
 
+$cmdOptions = getopt('s::');
+$signal = $cmdOptions['s'] ?? 'start';
+
+try {
+    $daemon = new \Panlatent\Server\Daemon(__FILE__);
+    switch ($signal) {
+        case 'start':
+            $daemon->start();
+            break;
+        case 'stop':
+            $daemon->stop();
+            exit(0);
+        case 'status':
+            if ($daemon->status()) {
+                die('Server is Running');
+            } else {
+                die('Server is Stopped');
+            }
+            break;
+        default:
+            die('Bad command line parameter');
+    }
+} catch (\Exception $e) {
+    die($e->getMessage());
+}
+
 $server = new Panlatent\Server\Http\Server();
 $server->bind('127.0.0.1', 10011);
 $server->listen();
