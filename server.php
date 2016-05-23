@@ -22,6 +22,9 @@ try {
         case 'start':
             $daemon->start();
             break;
+        case 'restart':
+            $daemon->restart();
+            break;
         case 'stop':
             $daemon->stop();
             exit(0);
