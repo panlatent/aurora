@@ -13,7 +13,8 @@
   "require": {
     "php": ">=7.0",
     "ext-pcntl": "*",
-    "ext-event": "*"
+    "ext-event": "*",
+    "panlatent/easy-shm": "dev-master"
   },
   "require-dev": {
     "phpunit/phpunit": "~4.0",
