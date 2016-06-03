@@ -17,6 +17,7 @@ class ServerStatus extends Command {
     {
         $this
             ->setName('server:status')
+            ->setAliases(['status'])
             ->setDescription('server status');
     }
 

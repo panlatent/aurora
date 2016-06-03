@@ -17,6 +17,7 @@ class ServerRestart extends Command {
     {
         $this
             ->setName('server:restart')
+            ->setAliases(['restart'])
             ->setDescription('restart server');
     }
 

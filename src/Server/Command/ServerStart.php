@@ -13,11 +13,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class ServerStart extends Command {
 
-
     protected function configure()
     {
         $this
             ->setName('server:start')
+            ->setAliases(['start'])
             ->setDescription('run server');
     }
 

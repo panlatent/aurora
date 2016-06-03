@@ -17,6 +17,7 @@ class ServerStop extends Command {
     {
         $this
             ->setName('server:stop')
+            ->setAliases(['stop'])
             ->setDescription('stop server');
     }
 
