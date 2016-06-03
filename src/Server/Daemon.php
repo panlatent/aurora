@@ -11,50 +11,32 @@ use Panlatent\EasyShm\Shm;
 
 class Daemon {
 
+    protected static $instance;
+
     protected $key;
 
     protected $shm;
 
-    public function __construct($daemonFile)
+    protected $callback;
+
+    public function __construct($daemonFile, $callback)
     {
+        static::$instance = $this;
+
         if (false === ($this->key = ftok($daemonFile, 'c'))) {
             throw new Exception('Daemon process startup failed: ftok() error');
         }
 
         $this->shm = new Shm($this->key, 4, 0660);
+        $this->callback = $callback;
     }
 
-    public function __destruct()
+    /**
+     * @return \Panlatent\Server\Daemon
+     */
+    public static function instance()
     {
-        if (false === $this->status()) {
-            $this->shm->delete();
-        }
-    }
-
-    public function status()
-    {
-        $pid = unpack('i1', $this->shm->read(0, 4))[1];
-
-        return $pid != 0 || posix_getpgid($pid) ? $pid : false;
-    }
-
-    public function restart()
-    {
-        if ($pid = $this->status()) {
-            $this->stop();
-        }
-
-        $this->start();
-    }
-
-    public function stop()
-    {
-        if ( ! ($pid = $this->status())) {
-            throw new Exception('Daemon process has been stopped');
-        }
-
-        posix_kill($pid, SIGHUP);
-        $this->shm->write(0, pack('i1', 0));
+        return static::$instance;
     }
 
     public function start()
@@ -67,12 +49,32 @@ class Daemon {
             case 0:
                 posix_setsid();
                 $this->shm->write(0, pack('i1', posix_getpid()));
-                break;
+
+                call_user_func($this->callback);
+
+                exit(0);
             case -1:
                 throw new Exception('Daemon process startup failed');
             default:
-                exit(0);
+                break;
         }
+    }
+
+    public function status()
+    {
+        $pid = unpack('i1', $this->shm->read(0, 4))[1];
+
+        return $pid != 0 && posix_getpgid($pid) ? $pid : false;
+    }
+
+    public function stop()
+    {
+        if ( ! ($pid = $this->status())) {
+            throw new Exception('Daemon process has been stopped');
+        }
+
+        posix_kill($pid, SIGTERM);
+        $this->shm->write(0, pack('i1', 0));
     }
 
 }
