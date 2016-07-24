@@ -31,7 +31,7 @@ class ServerStatus extends Command
             if (($status = $this->daemon->status())) {
                 $output->writeln("<info>Aurora is working! Master Process PID:[{$status['pid']}]</info>");
             } else {
-                $output->writeln('<error>Aurora has stopped working!</error>');
+                $output->writeln('<warning>Aurora has stopped working!</warning>');
             }
         } catch (\Exception $e) {
             $output->writeln('<error>' . $e->getMessage() . '</error>');
