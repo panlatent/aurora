@@ -1,6 +1,6 @@
 {
-  "name": "panlatent/server",
-  "description": "A Http Server.",
+  "name": "panlatent/aurora",
+  "description": "A HTTP Application Server of PHP Script",
   "type": "library",
   "license": "MIT",
   "authors": [
@@ -12,8 +12,9 @@
   "minimum-stability": "dev",
   "require": {
     "php": ">=7.0",
-    "ext-pcntl": "*",
     "ext-event": "*",
+    "ext-pcntl": "*",
+    "monolog/monolog": "~1.20",
     "symfony/console": "~3.1",
     "panlatent/easy-shm": "dev-master"
   },
@@ -23,7 +24,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Panlatent\\Server\\": "src/Server/"
+      "Aurora\\": "src/Aurora/"
     }
   }
 }

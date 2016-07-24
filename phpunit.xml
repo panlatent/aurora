@@ -9,7 +9,7 @@
          processIsolation="false"
          stopOnFailure="false"
          syntaxCheck="false">
-    <testsuite name="Server Test Suite">
+    <testsuite name="Aurora Test Suite">
         <directory>./tests/</directory>
     </testsuite>
 </phpunit>

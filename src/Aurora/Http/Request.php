@@ -1,15 +1,16 @@
 <?php
 /**
- * Server
+ * Aurora - A HTTP Application Server of PHP Script
  *
  * @author  panlatent@gmail.com
- * @link    https://github.com/panlatent/seven-server
+ * @link    https://github.com/panlatent/aurora
  * @license https://opensource.org/licenses/MIT
  */
 
-namespace Panlatent\Server\Http;
+namespace Aurora\Http;
 
-class Request {
+class Request implements Producible
+{
 
     protected $method;
     protected $uri;
@@ -34,7 +35,7 @@ class Request {
         $this->rawBody = $rawBody;
     }
 
-    public static function new($rawHttpMessage)
+    public static function factory($rawHttpMessage = null)
     {
         if (false !== ($separatePos = strpos($rawHttpMessage, "\r\n\r\n"))) {
             $rawHeader = substr($rawHttpMessage, 0, $separatePos);
@@ -121,5 +122,15 @@ class Request {
         }
 
         return $this->server[$name] ?? null;
+    }
+
+    public function header($name)
+    {
+        return $this->header[$name];
+    }
+
+    public function headers()
+    {
+        return $this->header;
     }
 }

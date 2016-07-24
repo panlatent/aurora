@@ -1,35 +1,41 @@
-#!/usr/bin/php70
 <?php
 /**
- * Server
+ * Aurora - A HTTP Application Server of PHP Script
  *
  * @author  panlatent@gmail.com
- * @link    https://github.com/panlatent/seven-server
+ * @link    https://github.com/panlatent/aurora
  * @license https://opensource.org/licenses/MIT
  */
-if ('cli' != php_sapi_name()) {
-    die('Can only run in CLI mode');
+
+use Aurora\Http\Request;
+use Aurora\Http\Server;
+
+if ( ! defined('AURORA_DAEMON')) {
+    define('AURORA_DAEMON', false);
+    require __DIR__ . '/vendor/autoload.php';
 }
 
-require __DIR__ . '/vendor/autoload.php';
+/** @var \Aurora\Pipeline $show */
+$show = (function () {
+    $pipeline = new \Aurora\Pipeline();
+    $pipeline->pipe(function ($body) {
+        $response = \Aurora\Http\Response::factory();
+        $response->setRawBody('<html><body>' . $body . '</body></html>');
 
-use Symfony\Component\Console\Application;
-
-$daemon = new \Panlatent\Server\Daemon(__FILE__, function () {
-    $server = new \Panlatent\Server\Http\Server();
-    $server->bind('127.0.0.1', 10011);
-    $server->listen();
-    $server->setOnRequest(function ($request, $response) {
-        var_dump($request);
+        return $response;
     });
-    $server->start();
-});
+    $pipeline->pipe(function (\Aurora\Http\Response $response, \Aurora\Pipeline $pipe) {
+        $pipe->client->send($response->getContent());
+    });
 
-$application = new Application('Http Server', '0.1.0');
-$application->addCommands([
-    new \Panlatent\Server\Command\ServerStart(),
-    new \Panlatent\Server\Command\ServerStop(),
-    new \Panlatent\Server\Command\ServerStatus(),
-    new \Panlatent\Server\Command\ServerRestart(),
-]);
-$application->run();
+    return $pipeline;
+})();
+
+$server = new Server();
+$server->bind('127.0.0.1', 10042);
+$server->listen();
+$server->pipe(function (Request $request) {
+    return 'HTTP_HOST: ' . $request->header('HTTP_HOST');
+});
+$server->pipeline()->join($show);
+$server->start();

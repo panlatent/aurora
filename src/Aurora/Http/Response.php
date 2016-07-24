@@ -1,15 +1,16 @@
 <?php
 /**
- * Server
+ * Aurora - A HTTP Application Server of PHP Script
  *
  * @author  panlatent@gmail.com
- * @link    https://github.com/panlatent/seven-server
+ * @link    https://github.com/panlatent/aurora
  * @license https://opensource.org/licenses/MIT
  */
 
-namespace Panlatent\Server\Http;
+namespace Aurora\Http;
 
-class Response {
+class Response implements Producible
+{
 
     protected $status;
     protected $version;
@@ -30,7 +31,7 @@ class Response {
         $this->rawBody = $rawBody;
     }
 
-    public static function new()
+    public static function factory($data = null)
     {
         $status = '200 OK';
         $version = 'HTTP/1.1';
@@ -80,7 +81,7 @@ class Response {
         return $this;
     }
 
-    public function exportRawHttpMessage()
+    public function getContent()
     {
         $firstLine = sprintf('%s %s', $this->version, $this->status);
         if (empty($this->header['CONTENT_TYPE']))
