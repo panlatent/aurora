@@ -14,6 +14,7 @@ class Aurora
     const NAME = 'Aurora';
     const INI = 'aurora.ini';
     const VERSION = '0.1.0';
+    const EXTENSIONS = ['posix', 'pcntl', 'event'];
 
     public static function os()
     {
