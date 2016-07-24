@@ -65,8 +65,8 @@ class Daemon
         }
         fwrite($fd, posix_getpid());
 
-        $this->closeStdDescriptors();
-        call_user_func(yield);
+//        $this->closeStdDescriptors();
+        call_user_func(yield, $this->config);
 
         flock($fd, LOCK_UN);
         fclose($fd);

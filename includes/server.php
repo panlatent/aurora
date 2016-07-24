@@ -10,14 +10,14 @@
 use Aurora\Http\Request;
 use Aurora\Http\Response;
 use Aurora\Http\Server;
+use Aurora\Support\Utils;
 
-if ( ! defined('AURORA_DAEMON')) {
-    define('AURORA_DAEMON', false);
-    require __DIR__ . '/vendor/autoload.php';
-}
-
+/** @var \Aurora\Config $config */
 $server = new Server();
-$server->bind('127.0.0.1', 10042);
+$listens = Utils::listens($config->get('bind.listen', '127.0.0.1:10042'));
+foreach ($listens as $listen) {
+    $server->bind($listen['address'], $listen['port']);
+}
 $server->listen();
 $server->pipe(function(Request $request) {
     yield 'HTTP_HOST: ' . $request->header('HTTP_HOST');
