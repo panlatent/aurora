@@ -10,6 +10,7 @@
 namespace Aurora;
 
 use Aurora\Pipeline\Exception;
+use Generator;
 
 class Pipeline
 {
@@ -82,8 +83,25 @@ class Pipeline
             if ($this->closed) {
                 break;
             }
-            if (null !== ($temp = call_user_func_array($section, [$content, $this]))) {
-                $content = $temp;
+
+            if (is_callable($section)) {
+                if (null !== ($generator = call_user_func_array($section, [$content, $this]))) {
+                    if (is_object($generator) && $generator instanceof Generator) {
+                        /** @var \Generator $generator */
+                        while ($generator->valid()) {
+                            if (null !== ($res = $generator->current())) {
+                                $content = $res;
+                            }
+                            $generator->send($content);
+                        }
+
+                        if (null !== ($res = $generator->getReturn())) {
+                            $content = $res;
+                        }
+                    } else {
+                        $content = $generator;
+                    }
+                }
             }
         }
 
