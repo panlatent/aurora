@@ -35,7 +35,7 @@ class ServerStart extends Command
 
             /** @var \Aurora\Console\Application $application */
             $application = $this->getApplication();
-            $this->daemon->start($application->getChildProcess());
+            $application->do($this->daemon->start());
             $output->writeln('<info>Aurora is working!</info>');
         } catch (\Exception $e) {
             $output->writeln('<error>' . $e->getMessage() . '</error>');

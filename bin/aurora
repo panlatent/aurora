@@ -47,7 +47,7 @@ $application->addCommands([
     new ServerStatus(),
     new ServerRestart(),
 ]);
-$application->setChildProcess(function () {
+$application->master(function () {
     require __DIR__ . '/../server.php';
 });
 $application->run();

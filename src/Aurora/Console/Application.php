@@ -9,17 +9,39 @@
 
 namespace Aurora\Console;
 
+use Aurora\Config;
+use Generator;
+
 class Application extends \Symfony\Component\Console\Application
 {
-    protected $childProcessCallback;
+    /**
+     * @var \Aurora\Config|null
+     */
+    protected $config;
 
-    public function getChildProcess()
+    /**
+     * @var callable
+     */
+    protected $master;
+
+    public function config()
     {
-        return $this->childProcessCallback;
+        return $this->config;
     }
 
-    public function setChildProcess($callback)
+    public function do(Generator $generator)
     {
-        $this->childProcessCallback = $callback;
+        $generator->send($this->master);
     }
+
+    public function master($callback)
+    {
+        $this->master = $callback;
+    }
+
+    public function setConfig(Config $config)
+    {
+        $this->config = $config;
+    }
+
 }

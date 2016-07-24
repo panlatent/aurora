@@ -34,12 +34,19 @@ class Command extends \Symfony\Component\Console\Command\Command
     {
         $this->addConsoleOutputColors($output);
 
-        $auroraConfigPath = $this->getAuroraConfigPath($input->getOption('config'));
-        if ( ! is_file($auroraConfigPath)) {
-            throw new Exception("Could not find the configuration file: $auroraConfigPath");
+        /** @var \Aurora\Console\Application $app */
+        $app = $this->getApplication();
+
+        if ( ! ($config = $app->config())) {
+            $configPath = $this->getAuroraConfigPath($input->getOption('config'));
+            if ( ! is_file($configPath)) {
+                throw new Exception("Could not find the configuration file: $configPath");
+            }
+
+            $config = new Config($configPath);
         }
-        $auroraConfig = new Config($auroraConfigPath);
-        $this->daemon = new Daemon($auroraConfig);
+
+        $this->daemon = new Daemon($config);
     }
 
     protected function addConsoleOutputColors(OutputInterface $output)

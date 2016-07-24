@@ -23,7 +23,11 @@ class Daemon
         $this->config = $config;
     }
 
-    public function start($childProcess)
+    /**
+     * @return \Generator
+     * @throws \Aurora\Console\Exception
+     */
+    public function start()
     {
         if (0 < ($pid = pcntl_fork())) {
             return;
@@ -61,9 +65,8 @@ class Daemon
         }
         fwrite($fd, posix_getpid());
 
-
 //        $this->closeStdDescriptors();
-        call_user_func($childProcess);
+        call_user_func(yield);
 
         flock($fd, LOCK_UN);
         fclose($fd);
