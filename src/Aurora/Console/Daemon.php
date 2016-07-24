@@ -24,7 +24,7 @@ class Daemon
     }
 
     /**
-     * @return \Generator
+     * @return \Generator|void
      * @throws \Aurora\Console\Exception
      */
     public function start()
@@ -65,7 +65,7 @@ class Daemon
         }
         fwrite($fd, posix_getpid());
 
-//        $this->closeStdDescriptors();
+        $this->closeStdDescriptors();
         call_user_func(yield);
 
         flock($fd, LOCK_UN);
