@@ -9,9 +9,10 @@
 
 namespace Aurora;
 
-interface SignalAcceptable
-{
-    const EVENT_CALLBACK = 'acceptSignal';
+use Aurora\Event\EventAccept;
+use Aurora\Event\EventAcceptable;
 
-    public function acceptSignal($signal, $fc);
+abstract class Event implements EventAcceptable
+{
+    use EventAccept;
 }

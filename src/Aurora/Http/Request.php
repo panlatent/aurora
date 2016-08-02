@@ -77,6 +77,9 @@ class Request implements Producible
             if ( ! isset($header['HTTP_CONTENT_TYPE'])) {
                 $header['HTTP_CONTENT_TYPE'] = 'text/plain';
             }
+
+            if (hasAppendArgs($header['HTTP_CONTENT_TYPE']))
+
             switch ($header['HTTP_CONTENT_TYPE']) {
                 case 'application/json':
                     $post = json_decode($rawBody);
@@ -132,5 +135,15 @@ class Request implements Producible
     public function headers()
     {
         return $this->header;
+    }
+
+    public function post($name)
+    {
+        return $this->post[$name];
+    }
+
+    public function posts()
+    {
+        return $this->post;
     }
 }

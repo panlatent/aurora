@@ -20,7 +20,9 @@ foreach ($listens as $listen) {
 }
 $server->listen();
 $server->pipe(function(Request $request) {
-    yield 'HTTP_HOST: ' . $request->header('HTTP_HOST');
+    yield $request->uri();
+//    $app = new Application();
+//    yield $app->handle($request);
 });
 
 $show = new \Aurora\Pipeline();

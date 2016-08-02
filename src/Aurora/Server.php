@@ -9,36 +9,31 @@
 
 namespace Aurora;
 
+use Aurora\Event\Dispatcher as EventDispatcher;
+use Aurora\Event\EventAccept;
+use Aurora\Event\EventAcceptable;
+use Aurora\Event\Listener;
+use Aurora\Event\SignalAcceptable;
 use Aurora\IPC\PipeMessage;
-use Event;
-use EventBase;
 
-class Server implements SignalAcceptable
+class Server implements EventAcceptable, SignalAcceptable
 {
+    const EVENT_SOCKET_CONNECT = 'socket:connect';
+    const EVENT_SOCKET_ACCEPT = 'socket:accept';
+    const EVENT_SOCKET_READ = 'socket:read';
+    const EVENT_SIGNAL_ACCEPT = 'signal:accept';
+
+    use EventAccept;
+
     /**
      * @var resource
      */
     protected $socket;
 
     /**
-     * @var Event
+     * @var \Aurora\Event\Dispatcher
      */
     protected $event;
-
-    /**
-     * @var array
-     */
-    protected $signalEvents = [];
-
-    /**
-     * @var array
-     */
-    protected $clientEvents = [];
-
-    /**
-     * @var EventBase
-     */
-    protected $eventBase;
 
     /**
      * @var int
@@ -55,7 +50,10 @@ class Server implements SignalAcceptable
      */
     protected $started = false;
 
-    protected $beginTimeMark = '';
+    /**
+     * @var bool
+     */
+    protected $worker = false;
 
     public function __construct()
     {
@@ -63,35 +61,28 @@ class Server implements SignalAcceptable
         socket_set_option($this->socket, SOL_SOCKET, SO_REUSEADDR, 1);
         socket_set_nonblock($this->socket);
 
-        $this->eventBase = new EventBase();
-        $this->event = new Event($this->eventBase, $this->socket, Event::READ |
-            Event::PERSIST, [$this, 'onAccept']);
-        $this->event->add();
+        $this->event = new EventDispatcher();
+        $this->event->bind(static::EVENT_SOCKET_CONNECT, $this);
+        $this->event->bind(static::EVENT_SOCKET_ACCEPT, $this);
+        $this->event->bind(static::EVENT_SOCKET_READ, $this);
+        $this->event->bind(static::EVENT_SIGNAL_ACCEPT, [$this, SignalAcceptable::EVENT_SIGNAL_CALLBACK]);
         $this->addSignalEvents([SIGTERM, SIGUSR1, SIGUSR2]);
 
         $this->pipeline = new Pipeline();
     }
 
-    protected function addSignalEvents(array $signals)
-    {
-        foreach ($signals as $signal) {
-            $this->signalEvents[$signal] = Event::signal($this->eventBase, $signal, [$this, SignalAcceptable::EVENT_CALLBACK]);
-            $this->signalEvents[$signal]->add();
-        }
-    }
-
     public function __destruct()
     {
-        $this->event->free();
-        $this->eventBase->free();
+        unset($this->pipeline);
+        unset($this->event);
         socket_close($this->socket);
     }
 
-    public function acceptSignal($signal, $fc)
+    public function acceptSignal($signal, $arg)
     {
         switch ($signal) {
             case SIGTERM:
-                $this->eventBase->exit();
+                $this->event->base()->exit();
                 break;
             case SIGUSR1: // Workers Shard Memory Message
                 break;
@@ -111,7 +102,9 @@ class Server implements SignalAcceptable
 
     public function bind($address, $port)
     {
-        return socket_bind($this->socket, $address, $port);
+        if ( ! @socket_bind($this->socket, $address, $port)) {
+            throw new Exception(error_get_last()['message']);
+        }
     }
 
     public function listen($backlog = 0)
@@ -136,7 +129,16 @@ class Server implements SignalAcceptable
         }
         $this->started = true;
 
-        return $this->eventBase->dispatch();
+        $this->event->listen(static::EVENT_SOCKET_CONNECT, new Listener($this->socket, \Event::READ |
+            \Event::PERSIST));
+
+        $state = $this->event->base()->dispatch();
+
+        if ($this->worker) {
+            exit(0);
+        }
+
+        return $state;
     }
 
     public function stop()
@@ -146,55 +148,29 @@ class Server implements SignalAcceptable
         }
         $this->started = false;
 
-        return $this->eventBase->stop();
+        return $this->event->base()->stop();
     }
 
-    public function onAccept($socket, $events, $arg)
+    public function onConnect($socket)
     {
         $client = socket_accept($socket);
         socket_set_nonblock($client);
-
-        $event = new Event($this->eventBase, $client, Event::READ | Event::PERSIST,
-            [$this, 'onRead']);
-
-        $clientEvent = $this->addClientEvent($client, $event);
-        $event->set($this->eventBase, $client, Event::READ | Event::PERSIST,
-            [$this, 'onRead'], $clientEvent);
-        $event->add();
+        $this->event->listen(static::EVENT_SOCKET_ACCEPT, new Listener($client, \Event::READ | \Event::PERSIST));
     }
 
-    protected function addClientEvent($client, $event)
+    public function onAccept($socket, $what, Listener $listener)
     {
-        $clientEvent = (object)['client' => $client, 'event' => $event];
-        array_push($this->clientEvents, $clientEvent);
-        end($this->clientEvents);
-        $clientEvent->ref = key($this->clientEvents);
-
-        return $clientEvent;
-    }
-
-    public function onRead($socket, $events, $clientEvent)
-    {
-        $clientEvent->event->del();
-        unset($this->clientEvents[$clientEvent->ref]);
-
+        $this->event->free(static::EVENT_SOCKET_ACCEPT, $listener);
         switch (pcntl_fork()) {
             case 0:
-                $this->pipeline->open();
-
-                do {
-                    $segment = socket_read($socket, $this->socketReadBufferSize);
-                    $this->pipeline->append($segment);
-                } while ($this->socketReadBufferSize == strlen($segment));
-
+                $this->event->reInit();
+                $this->worker = true;
                 $client = new Client($socket);
 
+                $this->pipeline->open();
                 $this->pipeline->bind('client', $client);
-                $this->pipeline->run();
-                $this->pipeline->close();
-
-                socket_close($socket);
-                exit(0);
+                $this->event->listen(static::EVENT_SOCKET_READ, new Listener($socket, \Event::READ | \Event::PERSIST));
+                break;
             case -1:
                 socket_close($socket);
                 throw new Exception('Failed to create a work process');
@@ -203,9 +179,29 @@ class Server implements SignalAcceptable
         }
     }
 
+    public function onRead($socket, $what, Listener $listener)
+    {
+        $segment = socket_read($socket, $this->socketReadBufferSize);
+        $this->pipeline->append($segment);
+
+        if ( ! $segment || $this->socketReadBufferSize != strlen($segment)) {
+            $this->pipeline->run();
+            $this->pipeline->close();
+            socket_close($socket);
+            $this->event->base()->stop();
+        }
+    }
+
     public function setSocketReadBufferSize($size)
     {
         $this->socketReadBufferSize = $size;
+    }
+
+    protected function addSignalEvents(array $signals)
+    {
+        foreach ($signals as $signal) {
+            $this->event->listen('signal:accept', new Listener($signal, \Event::SIGNAL));
+        }
     }
 
 }
