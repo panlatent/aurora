@@ -47,17 +47,19 @@ class Dispatcher
 
     public function fire($name, $arg = [])
     {
-        foreach ($this->binds->get($name) as $callback) {
-            if (is_object($callback)) {
-                if ($callback instanceof EventAcceptable) {
-                    $callback->acceptEvent($name, $arg);
-                    continue;
-                }  elseif ( ! $callback instanceof \Closure) {
-                    $callback = $callback->callback;
+        if ( ! empty(($binds = $this->binds->get($name)))) {
+            foreach ($binds as $callback) {
+                if (is_object($callback)) {
+                    if ($callback instanceof EventAcceptable) {
+                        $callback->acceptEvent($name, $arg);
+                        continue;
+                    } elseif ( ! $callback instanceof \Closure) {
+                        $callback = $callback->callback;
+                    }
                 }
-            }
 
-            call_user_func_array($callback, $arg);
+                call_user_func_array($callback, $arg);
+            }
         }
     }
 
