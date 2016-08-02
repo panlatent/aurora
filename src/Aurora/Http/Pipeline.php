@@ -65,8 +65,6 @@ class Pipeline extends \Aurora\Pipeline implements EventAcceptable, EventManagea
                 $firstLine = null;
                 $header = null;
 
-                var_dump($request);
-
                 $this->dispatch($request);
             }
         }
