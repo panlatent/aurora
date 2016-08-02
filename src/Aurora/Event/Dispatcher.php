@@ -48,9 +48,15 @@ class Dispatcher
     public function fire($name, $arg = [])
     {
         foreach ($this->binds->get($name) as $callback) {
-            if (is_object($callback) && ! $callback instanceof \Closure) {
-                $callback = $callback->callback;
+            if (is_object($callback)) {
+                if ($callback instanceof EventAcceptable) {
+                    $callback->acceptEvent($name, $arg);
+                    continue;
+                }  elseif ( ! $callback instanceof \Closure) {
+                    $callback = $callback->callback;
+                }
             }
+
             call_user_func_array($callback, $arg);
         }
     }
@@ -59,10 +65,6 @@ class Dispatcher
     {
         if ( ! is_object($callback)) {
             $callback = (object)['callback' => $callback];
-        } elseif ( $callback instanceof EventAcceptable) {
-            $info = $this->getNameInfo($name);
-            $method = 'on' . StringUtil::convertCamel($info['action']);
-            $callback = (object)['callback' => [$callback, $method]];
         }
         $this->binds->add($name, $callback);
     }

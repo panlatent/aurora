@@ -9,104 +9,111 @@
 
 namespace Aurora\Http;
 
+use Aurora\Http\Request\FirstLine;
+use Aurora\Http\Request\Header;
+
 class Request implements Producible
 {
+    /**
+     * @var \Aurora\Http\Request\FirstLine
+     */
+    protected $firstLine;
 
-    protected $method;
-    protected $uri;
-    protected $version;
+    /**
+     * @var \Aurora\Http\Request\Header
+     */
     protected $header;
+
+    /**
+     * @var \Aurora\Http\ParameterStorage
+     */
     protected $query;
+
+    /**
+     * @var \Aurora\Http\ParameterStorage
+     */
     protected $post;
+
+    /**
+     * @var \Aurora\Http\ParameterStorage
+     */
     protected $files;
+
+    /**
+     * @var \Aurora\Http\ParameterStorage
+     */
     protected $server;
+
+    /**
+     * @var string
+     */
     protected $rawBody;
 
-    public function __construct($method, $uri, $version, $header = [], $query = [], $post = [], $files = [], $server = [], $rawBody = '')
+    public function __construct(FirstLine $firstLine, Header $header = null, ParameterStorage $query = null,
+                                ParameterStorage $post = null, ParameterStorage $files = null,
+                                ParameterStorage $server = null, $rawBody = '')
     {
-        $this->method = $method;
-        $this->uri = $uri;
-        $this->version = $version;
+        $this->firstLine = $firstLine;
         $this->header = $header;
         $this->query = $query;
         $this->post = $post;
         $this->files = $files;
         $this->server = $server;
         $this->rawBody = $rawBody;
+
+        if ( ! $this->query) $this->parseQuery();
+        if ( ! $this->post) $this->parseRawBody();
+        if ( ! $this->files) $this->parseFiles();
+        if ( ! $this->server) $this->parseServer();
     }
 
-    public static function factory($rawHttpMessage = null)
+    public static function factory($rawHttpRequest = null)
     {
-        if (false !== ($separatePos = strpos($rawHttpMessage, "\r\n\r\n"))) {
-            $rawHeader = substr($rawHttpMessage, 0, $separatePos);
-            $rawBody = substr($rawHttpMessage, $separatePos + 4);
-        } else {
-            $rawHeader = $rawHttpMessage;
-            $rawBody = '';
-        }
+        if (is_string($rawHttpRequest)) {
+            if (false === ($firstLinePos = strpos($rawHttpRequest, "\r\n"))) {
 
-        $header = explode("\r\n", $rawHeader);
-        $firstLine = explode(' ', $header[0], 3);
+            }
+            $rawFirstLine = substr($rawHttpRequest, 0, $firstLinePos);
+            $firstLine = FirstLine::factory($rawFirstLine);
+            if (false === ($rawHeaderEndPos = strpos($rawHttpRequest, "\r\n\r\n", $firstLinePos + 2))) {
 
-        $method = strtoupper($firstLine[0]);
-        $url = $firstLine[1];
-        $version = $firstLine[2];
+            }
+            $rawHeader = substr($rawHttpRequest, $firstLinePos + 2, $rawHeaderEndPos - $firstLinePos - 2);
+            $header = Header::factory($rawHeader);
 
-        $urlParts = parse_url($url);
-        $uri = rawurldecode($urlParts['path']);
-
-        $query = [];
-        if ( ! empty($urlParts['query'])) {
-            parse_str($urlParts['query'], $query);
-        }
-
-        $header = array_slice($header, 1);
-        foreach ($header as $key => $item) {
-            if ($item{0} == "\t" || $item{0} == ' ') {
-                $header[key($header)] = end($header) . ' ' . trim($item);
+            $httpContentLength =  $header->header('HTTP_CONTENT_LENGTH', null);
+            if ( ! $firstLine->isEmptyBody()) {
+                $rawBody = substr($rawHttpRequest, $rawHeaderEndPos + 4, $httpContentLength);
             } else {
-                $item = explode(':', $item, 2);
-                $header['HTTP_' . str_replace('-', '_', strtoupper($item[0]))] = trim($item[1]);
-                unset($header[$key]);
+                $rawBody = '';
             }
+        } else {
+            $firstLine = $rawHttpRequest['firstLine'];
+            $header = $rawHttpRequest['header'];
+            $rawBody = $rawHttpRequest['rawBody'];
         }
 
-        $post = [];
-        $files = [];
-        if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
-            if ( ! isset($header['HTTP_CONTENT_TYPE'])) {
-                $header['HTTP_CONTENT_TYPE'] = 'text/plain';
-            }
+        return new static($firstLine, $header, null, null, null, null, $rawBody);
+    }
 
-            if (hasAppendArgs($header['HTTP_CONTENT_TYPE']))
+    public function method()
+    {
+        return $this->firstLine->method();
+    }
 
-            switch ($header['HTTP_CONTENT_TYPE']) {
-                case 'application/json':
-                    $post = json_decode($rawBody);
-                    break;
-                case 'application/x-www-form-urlencoded':
-                    foreach (explode('&', $rawBody) as $item) {
-                        $pos = strpos($item, '=');
-                        $post[rawurldecode(substr($item, 0, $pos))] = rawurldecode(substr($item, $pos + 1));
-                    }
-                    break;
-                case 'multipart/form-data':
-                    break;
-                case 'text/xml':
-                    break;
-                case 'text/html':
-                case 'text/plain':
-                default:
-                    $post = [];
-            }
-        }
-
-        return new static($method, $uri, $version, $header, $query, $post, $files, [], $rawBody); //@todo
+    public function url()
+    {
+        return $this->firstLine->uri();
     }
 
     public function uri()
     {
-        return $this->uri;
+        return $this->firstLine->uri();
+    }
+
+    public function version($onlyNumber = false)
+    {
+        return $this->firstLine->version($onlyNumber);
     }
 
     public function query($name = null)
@@ -127,9 +134,9 @@ class Request implements Producible
         return $this->server[$name] ?? null;
     }
 
-    public function header($name)
+    public function header($name, $default = false)
     {
-        return $this->header[$name];
+        return $this->header->get($name, $default);
     }
 
     public function headers()
@@ -146,4 +153,62 @@ class Request implements Producible
     {
         return $this->post;
     }
+
+    public function rawBody()
+    {
+        return $this->rawBody;
+    }
+
+    protected function parseRawBody()
+    {
+        if ($this->firstLine->isEmptyBody()) {
+            $this->post = new ParameterStorage();
+        } else {
+            $contentType = $this->header->headerValue('HTTP_CONTENT_TYPE', 'text/plain');
+            switch ($contentType) {
+                case 'application/json':
+                    $post = json_decode($this->rawBody);
+                    break;
+                case 'application/x-www-form-urlencoded':
+                    foreach (explode('&', $this->rawBody) as $item) {
+                        $pos = strpos($item, '=');
+                        $post[urldecode(substr($item, 0, $pos))] = urldecode(substr($item, $pos + 1));
+                    }
+                    break;
+                case 'multipart/form-data': // @todo
+                    break;
+                case 'text/xml': // @todo
+                    break;
+                case 'text/html':
+                case 'text/plain':
+                default:
+                    break;
+            }
+
+            if (isset($post)) {
+                $this->post = new ParameterStorage($post);
+            }
+        }
+    }
+
+    protected function parseQuery()
+    {
+        $query = [];
+        if ($rawQuery = $this->firstLine->query()) {
+            parse_str($rawQuery, $query);
+        }
+
+        $this->query = new ParameterStorage($query);
+    }
+
+    protected function parseFiles() // @todo
+    {
+        $this->files = new ParameterStorage();
+    }
+
+    protected function parseServer() // @todo
+    {
+        $this->server = new ParameterStorage();
+    }
+
 }

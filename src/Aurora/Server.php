@@ -55,20 +55,16 @@ class Server implements EventAcceptable, SignalAcceptable
      */
     protected $worker = false;
 
+    /**
+     * @var array
+     */
+    protected $workerPidStore = [];
+
     public function __construct()
     {
-        $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-        socket_set_option($this->socket, SOL_SOCKET, SO_REUSEADDR, 1);
-        socket_set_nonblock($this->socket);
-
-        $this->event = new EventDispatcher();
-        $this->event->bind(static::EVENT_SOCKET_CONNECT, $this);
-        $this->event->bind(static::EVENT_SOCKET_ACCEPT, $this);
-        $this->event->bind(static::EVENT_SOCKET_READ, $this);
-        $this->event->bind(static::EVENT_SIGNAL_ACCEPT, [$this, SignalAcceptable::EVENT_SIGNAL_CALLBACK]);
-        $this->addSignalEvents([SIGTERM, SIGUSR1, SIGUSR2]);
-
-        $this->pipeline = new Pipeline();
+        $this->initSocket();
+        $this->initEvent();
+        $this->initPipeline();
     }
 
     public function __destruct()
@@ -76,28 +72,6 @@ class Server implements EventAcceptable, SignalAcceptable
         unset($this->pipeline);
         unset($this->event);
         socket_close($this->socket);
-    }
-
-    public function acceptSignal($signal, $arg)
-    {
-        switch ($signal) {
-            case SIGTERM:
-                $this->event->base()->exit();
-                break;
-            case SIGUSR1: // Workers Shard Memory Message
-                break;
-            case SIGUSR2: // Daemon Pipeline Message
-                $pipeMessage = new PipeMessage('/tmp/' . posix_getpid());
-                $request = $pipeMessage->receive();
-
-                if ($request['msg'] == 'status') {
-                    $pipeMessage->send(['status' => true]);
-                }
-
-                break;
-            default:
-                return;
-        }
     }
 
     public function bind($address, $port)
@@ -151,6 +125,31 @@ class Server implements EventAcceptable, SignalAcceptable
         return $this->event->base()->stop();
     }
 
+    public function acceptSignal($signal, $arg)
+    {
+        switch ($signal) {
+            case SIGTERM:
+                foreach ($this->workerPidStore as $pid) {
+                    posix_kill($pid, SIGKILL);
+                }
+                $this->event->base()->exit();
+                break;
+            case SIGUSR1: // @todo Workers Shard Memory Message
+                break;
+            case SIGUSR2: // @todo Daemon and Worker Pipeline Message
+                break;
+            case SIGCHLD:
+                while (($pid = pcntl_waitpid(-1, $status, WUNTRACED | WNOHANG)) > 0) {
+                    if (false !== ($key = array_search($pid, $this->workerPidStore))) {
+                        unset($this->workerPidStore[$key]);
+                    }
+                }
+                break;
+            default:
+                return;
+        }
+    }
+
     public function onConnect($socket)
     {
         $client = socket_accept($socket);
@@ -161,7 +160,7 @@ class Server implements EventAcceptable, SignalAcceptable
     public function onAccept($socket, $what, Listener $listener)
     {
         $this->event->free(static::EVENT_SOCKET_ACCEPT, $listener);
-        switch (pcntl_fork()) {
+        switch ($pid = pcntl_fork()) {
             case 0:
                 $this->event->reInit();
                 $this->worker = true;
@@ -169,32 +168,56 @@ class Server implements EventAcceptable, SignalAcceptable
 
                 $this->pipeline->open();
                 $this->pipeline->bind('client', $client);
-                $this->event->listen(static::EVENT_SOCKET_READ, new Listener($socket, \Event::READ | \Event::PERSIST));
+                $this->event->listen(static::EVENT_SOCKET_READ, new Listener($socket, \Event::READ | \Event::PERSIST, $client));
                 break;
             case -1:
                 socket_close($socket);
                 throw new Exception('Failed to create a work process');
             default:
+                $this->workerPidStore[] = $pid;
                 socket_close($socket);
         }
     }
 
     public function onRead($socket, $what, Listener $listener)
     {
-        $segment = socket_read($socket, $this->socketReadBufferSize);
-        $this->pipeline->append($segment);
-
-        if ( ! $segment || $this->socketReadBufferSize != strlen($segment)) {
-            $this->pipeline->run();
-            $this->pipeline->close();
-            socket_close($socket);
-            $this->event->base()->stop();
+        if ($segment = socket_read($socket, $this->socketReadBufferSize)) {
+            $this->pipeline->append($segment);
         }
+
+//        if ( ! $segment || $this->socketReadBufferSize != strlen($segment)) {
+//            $this->pipeline->send();
+//            $this->pipeline->close();
+//            socket_close($socket);
+//            $this->event->base()->stop();
+//        }
     }
 
     public function setSocketReadBufferSize($size)
     {
         $this->socketReadBufferSize = $size;
+    }
+
+    protected function initSocket()
+    {
+        $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+        socket_set_option($this->socket, SOL_SOCKET, SO_REUSEADDR, 1);
+        socket_set_nonblock($this->socket);
+    }
+
+    protected function initEvent()
+    {
+        $this->event = new EventDispatcher();
+        $this->event->bind(static::EVENT_SOCKET_CONNECT, $this);
+        $this->event->bind(static::EVENT_SOCKET_ACCEPT, $this);
+        $this->event->bind(static::EVENT_SOCKET_READ, $this);
+        $this->event->bind(static::EVENT_SIGNAL_ACCEPT, [$this, SignalAcceptable::EVENT_SIGNAL_CALLBACK]);
+        $this->addSignalEvents([SIGTERM, SIGUSR1, SIGUSR2, SIGCHLD]);
+    }
+
+    protected function initPipeline()
+    {
+        $this->pipeline = new Pipeline();
     }
 
     protected function addSignalEvents(array $signals)
@@ -203,5 +226,6 @@ class Server implements EventAcceptable, SignalAcceptable
             $this->event->listen('signal:accept', new Listener($signal, \Event::SIGNAL));
         }
     }
+
 
 }

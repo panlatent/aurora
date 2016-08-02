@@ -9,15 +9,21 @@
 
 namespace Aurora;
 
+use Aurora\Pipeline\Buffer;
 use Aurora\Pipeline\Exception;
 use Generator;
 
 class Pipeline
 {
     /**
-     * @var array
+     * @var bool
      */
-    protected $sections = [];
+    protected $closed = true;
+
+    /**
+     * @var \Aurora\Pipeline\Buffer
+     */
+    protected $buffer;
 
     /**
      * @var \Aurora\Pipeline
@@ -25,22 +31,18 @@ class Pipeline
     protected $next;
 
     /**
-     * @var bool
-     */
-    protected $closed = true;
-
-    /**
-     * @var string
-     */
-    protected $content = '';
-
-    /**
      * @var array
      */
     protected $data = [];
 
+    /**
+     * @var array
+     */
+    protected $sections = [];
+
     public function __construct()
     {
+        $this->buffer = new Buffer();
     }
 
     public function pipe($callback)
@@ -48,7 +50,6 @@ class Pipeline
         if ( ! is_callable($callback)) {
             throw new Exception("Parameter must be a callable type");
         }
-
         $this->sections[] = $callback;
 
         return $this;
@@ -60,8 +61,8 @@ class Pipeline
             $this->next = $pipe;
         } else {
             $next = $this->next;
-            while ($n = $next->next()) {
-                $next = $n;
+            while ($afterNext = $next->next()) {
+                $next = $afterNext;
             }
 
             $next->join($pipe);
@@ -75,10 +76,46 @@ class Pipeline
         return $this->next;
     }
 
-    public function run()
+    public function open()
     {
-        $content = $this->content;
+        if ( ! $this->closed) {
+            throw new Exception("Pipeline has been opened");
+        }
+        $this->closed = false;
 
+        return $this;
+    }
+
+    public function close()
+    {
+        if ( ! $this->closed) {
+            $this->closed = true;
+        }
+
+        return $this;
+    }
+
+
+    public function buffer()
+    {
+        return $this->buffer;
+    }
+
+    public function data($name)
+    {
+        return $this->data[$name];
+    }
+
+    public function send($length = null)
+    {
+        if (null === $length) {
+            $length = $this->buffer->size();
+        }
+        $this->dispatch($this->buffer->pop($length));
+    }
+
+    public function dispatch($content)
+    {
         foreach ($this->sections as $section) {
             if ($this->closed) {
                 break;
@@ -111,7 +148,7 @@ class Pipeline
             }
             $this->next->write($content);
             $this->next->open();
-            $this->next->run();
+            $this->next->send();
             $this->next->close();
         }
 
@@ -125,32 +162,12 @@ class Pipeline
 
     public function write($content)
     {
-        $this->content = $content;
-    }
-
-    public function open()
-    {
-        if ( ! $this->closed) {
-            throw new Exception("Pipeline has been opened");
-        }
-        $this->closed = false;
-
-        return $this;
-    }
-
-    public function close()
-    {
-        if ( ! $this->closed) {
-            $this->closed = true;
-            $this->content = '';
-        }
-
-        return $this;
+        $this->buffer->write($content);
     }
 
     public function append($content)
     {
-        $this->content .= $content;
+        $this->buffer->append($content);
     }
 
     public function __get($name)

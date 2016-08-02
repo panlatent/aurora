@@ -9,7 +9,59 @@
 
 namespace Aurora\Http\Request;
 
-class Header
-{
+use Aurora\Http\ParameterStorage;
+use Aurora\Http\Producible;
 
+class Header extends ParameterStorage implements Producible
+{
+    public static function factory($rawHeaders = null)
+    {
+        $headers = [];
+        foreach (explode("\r\n", $rawHeaders) as $header) {
+            if ($header{0} == "\t" || $header{0} == ' ') {
+                $headers[key($headers)] = end($headers) . ' ' . trim($header);
+            } else {
+                $headerParameter = explode(':', $header, 2);
+                $headers['HTTP_' . str_replace('-', '_', strtoupper($headerParameter[0]))] = trim($headerParameter[1]);
+            }
+        }
+
+        return new static($headers);
+    }
+
+    public function header($name, $default = false)
+    {
+        return $this->get($name, $default);
+    }
+
+    public function headerValue($name, $default = false)
+    {
+        if ( ! ($header = $this->get($name, $default))) {
+            return $header;
+        }
+
+        if (false !== ($pos = strpos($header, ';'))) {
+            return substr($header, 0, $pos);
+        } else {
+            return $header;
+        }
+    }
+
+    public function headerParameters($name, $default = false)
+    {
+        if ( ! ($header = $this->get($name, $default))) {
+            return $header;
+        }
+
+        if (false !== ($pos = strpos($header, ';'))) {
+            return substr($header, $pos + 1);
+        } else {
+            return $header;
+        }
+    }
+
+    public function headers()
+    {
+        return $this->all();
+    }
 }

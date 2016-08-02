@@ -7,11 +7,9 @@
  * @license https://opensource.org/licenses/MIT
  */
 
-namespace Aurora\Http\Request;
+namespace Aurora\Event;
 
-class Post
+interface EventManageable
 {
-    public function __construct()
-    {
-    }
+    public function setEventManager(Dispatcher $dispatcher);
 }

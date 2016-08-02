@@ -24,12 +24,18 @@ class Client
     public function __construct($socket)
     {
         $this->socket = $socket;
-        // $this->event = new EventDispatcher();
+    }
+
+    public function __destruct()
+    {
+
     }
 
     public function close()
     {
-        socket_close($this->socket);
+        if ($this->socket) {
+            socket_close($this->socket);
+        }
     }
 
     public function socket()
