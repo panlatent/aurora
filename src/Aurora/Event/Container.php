@@ -30,15 +30,21 @@ class Container
         return $this->storage[$name];
     }
 
-    public function remove($name, $object = null)
+    public function isset($name)
     {
-        if (null === $object) {
-            unset($this->storage[$name]);
-        } else {
-            /** @var \SplObjectStorage $objects */
-            $objects = $this->storage[$name];
-            $objects->detach($objects);
-        }
+        return isset($this->storage[$name]);
+    }
+
+    public function remove($name, $object)
+    {
+        /** @var \SplObjectStorage $objects */
+        $objects = $this->storage[$name];
+        $objects->detach($objects);
+    }
+
+    public function unset($name)
+    {
+        unset($this->storage[$name]);
     }
 
 }

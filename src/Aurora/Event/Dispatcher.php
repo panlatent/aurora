@@ -9,8 +9,6 @@
 
 namespace Aurora\Event;
 
-use Aurora\Support\StringUtil;
-
 class Dispatcher
 {
     /**
@@ -47,8 +45,8 @@ class Dispatcher
 
     public function fire($name, $arg = [])
     {
-        if ( ! empty(($binds = $this->binds->get($name)))) {
-            foreach ($binds as $callback) {
+        if ($this->binds->isset($name)) {
+            foreach ($this->binds->get($name) as $callback) {
                 if (is_object($callback)) {
                     if ($callback instanceof EventAcceptable) {
                         $callback->acceptEvent($name, $arg);
@@ -96,7 +94,7 @@ class Dispatcher
                     $listener->delete();
                 }
             }
-            $this->listeners->remove($name);
+            $this->listeners->unset($name);
         } else {
             if ( ! $onlyClear) {
                 $listener->delete();
