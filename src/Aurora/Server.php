@@ -66,6 +66,11 @@ class Server implements EventAcceptable, SignalAcceptable
         socket_close($this->socket);
     }
 
+    public static function createMatchPipeline()
+    {
+        return new Pipeline();
+    }
+
     public function pipeline()
     {
         return $this->pipeline;
