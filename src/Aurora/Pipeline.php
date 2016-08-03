@@ -9,12 +9,18 @@
 
 namespace Aurora;
 
+use Aurora\Event\EventAccept;
+use Aurora\Event\EventAcceptable;
+use Aurora\Event\EventManageable;
+use Aurora\Event\EventManager;
 use Aurora\Pipeline\Buffer;
 use Aurora\Pipeline\Exception;
 use Generator;
 
-class Pipeline
+class Pipeline implements EventAcceptable, EventManageable
 {
+    use EventAccept, EventManager;
+
     /**
      * @var bool
      */
@@ -48,7 +54,7 @@ class Pipeline
     public function pipe($callback)
     {
         if ( ! is_callable($callback)) {
-            throw new Exception("Parameter must be a callable type");
+            throw new Exception("Pipeline parameter must be a callable type, give a " . gettype($callback));
         }
         $this->sections[] = $callback;
 
@@ -81,20 +87,22 @@ class Pipeline
         if ( ! $this->closed) {
             throw new Exception("Pipeline has been opened");
         }
+
+        if ( ! $this->eventAcceptor) $this->eventAcceptor = new Pipeline\Events($this);
+
         $this->closed = false;
+        $this->eventAcceptor->setEvent($this->event);
+        $this->eventAcceptor->register();
 
         return $this;
     }
 
     public function close()
     {
-        if ( ! $this->closed) {
-            $this->closed = true;
-        }
+        if ( ! $this->closed) $this->closed = true;
 
         return $this;
     }
-
 
     public function buffer()
     {
@@ -146,9 +154,8 @@ class Pipeline
             foreach ($this->data as $item => $value) {
                 $this->next->bind($item, $value);
             }
-            $this->next->write($content);
             $this->next->open();
-            $this->next->send();
+            $this->next->dispatch($content);
             $this->next->close();
         }
 
@@ -160,19 +167,16 @@ class Pipeline
         $this->data[$name] = $data;
     }
 
-    public function write($content)
-    {
-        $this->buffer->write($content);
-    }
-
     public function append($content)
     {
         $this->buffer->append($content);
+
+        if ($this->event) $this->event->fire('pipeline:append');
     }
 
-    public function __get($name)
+    public function write($content)
     {
-        return $this->data[$name];
+        $this->buffer->write($content);
     }
 
 }
