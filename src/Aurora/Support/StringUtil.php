@@ -43,6 +43,17 @@ class StringUtil
     }
 
     /**
+     * Convert a multi line string to single line string.
+     *
+     * @param $str string
+     * @return string
+     */
+    public static function convertSingleLine($str)
+    {
+        return preg_replace('/\s*[\r\n]+\s*/', ' ', $str);
+    }
+
+    /**
      * Make a random string.
      *
      * @param int    $length
