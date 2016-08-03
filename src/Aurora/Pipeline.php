@@ -14,6 +14,7 @@ use Aurora\Event\EventAcceptable;
 use Aurora\Event\EventManageable;
 use Aurora\Event\EventManager;
 use Aurora\Pipeline\Buffer;
+use Aurora\Pipeline\Events;
 use Aurora\Pipeline\Exception;
 use Generator;
 
@@ -51,6 +52,12 @@ class Pipeline implements EventAcceptable, EventManageable
         $this->buffer = new Buffer();
     }
 
+    /**
+     * @param $callback
+     *
+     * @return $this
+     * @throws \Aurora\Pipeline\Exception
+     */
     public function pipe($callback)
     {
         if ( ! is_callable($callback)) {
@@ -86,9 +93,9 @@ class Pipeline implements EventAcceptable, EventManageable
     {
         if ( ! $this->closed) {
             throw new Exception("Pipeline has been opened");
+        } elseif ( ! $this->eventAcceptor) {
+            $this->eventAcceptor = $this->createEventAcceptor();
         }
-
-        if ( ! $this->eventAcceptor) $this->eventAcceptor = new Pipeline\Events($this);
 
         $this->closed = false;
         $this->eventAcceptor->setEvent($this->event);
@@ -171,12 +178,19 @@ class Pipeline implements EventAcceptable, EventManageable
     {
         $this->buffer->append($content);
 
-        if ($this->event) $this->event->fire('pipeline:append');
+        if ($this->event) {
+            $this->event->fire('pipeline:append');
+        }
     }
 
     public function write($content)
     {
         $this->buffer->write($content);
+    }
+
+    protected function createEventAcceptor()
+    {
+        return new Events($this);
     }
 
 }

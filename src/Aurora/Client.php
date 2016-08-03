@@ -33,8 +33,8 @@ class Client implements EventManageable
         $this->socket = $socket;
         $this->pipeline = $pipeline;
 
-        $this->eventAcceptor = new Events($this);
-        $this->eventAcceptor->setEvent($event);
+        $this->createEventAcceptor();
+        $this->eventAcceptor->setEvent($this->event);
         $this->eventAcceptor->register();
 
         $this->pipeline->bind('client', $this);
@@ -54,12 +54,19 @@ class Client implements EventManageable
     public function close()
     {
         socket_close($this->socket);
-        $this->event->base()->stop();
+        if ( ! $this->event->base()->gotStop()) {
+            $this->event->base()->stop();
+        }
     }
 
     public function send($content)
     {
         socket_write($this->socket, $content);
+    }
+
+    protected function createEventAcceptor()
+    {
+        $this->eventAcceptor = new Events($this);
     }
 
 }
