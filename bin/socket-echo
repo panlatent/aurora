@@ -1,0 +1,32 @@
+#!/usr/bin/php70
+<?php
+/**
+ * Aurora - A HTTP Application Server of PHP Script
+ *
+ * @author  panlatent@gmail.com
+ * @link    https://github.com/panlatent/aurora
+ * @license https://opensource.org/licenses/MIT
+ */
+
+/**
+ * This is a simple socket server. It's without daemon process.
+ */
+require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/../includes/environment.php';
+require __DIR__ . '/../includes/constants.php';
+
+use Aurora\Pipeline;
+use Aurora\Server;
+
+$pipeline = new Pipeline();
+$pipeline->pipe(function($content) {
+    echo $content . "\n";
+});
+
+$server = new Server();
+$server->bind('127.0.0.1', 10043);
+$server->listen();
+$server->setPipeline($pipeline);
+$server->start();
+
+

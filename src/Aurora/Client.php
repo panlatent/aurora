@@ -13,48 +13,44 @@ use Aurora\Event\Dispatcher as EventDispatcher;
 
 class Client
 {
-    protected $socket;
+    protected $worker;
 
     protected $event;
 
-    protected $keep = false;
+    protected $socket;
 
-    protected $streamline = true;
+    protected $pipeline;
 
-    public function __construct($socket)
+    public function __construct(Worker $worker, EventDispatcher $event, $socket, Pipeline $pipeline)
     {
+        $this->worker = $worker;
+        $this->event = $event;
         $this->socket = $socket;
+        $this->pipeline = $pipeline;
+
+        $this->pipeline->bind('client', $this);
+        $this->pipeline->open();
     }
 
-    public function __destruct()
+    public function pipeline()
     {
-
-    }
-
-    public function close()
-    {
-        if ($this->socket) {
-            socket_close($this->socket);
-        }
+        return $this->pipeline;
     }
 
     public function socket()
     {
-        return $this->socket();
+        return $this->socket;
     }
 
-    public function isKeep()
+    public function close()
     {
-        return $this->keep;
-    }
-
-    public function isStreamline()
-    {
-        return $this->streamline;
+        socket_close($this->socket);
+        $this->event->base()->stop();
     }
 
     public function send($content)
     {
         socket_write($this->socket, $content);
     }
+
 }
