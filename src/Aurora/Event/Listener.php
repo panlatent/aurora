@@ -22,6 +22,16 @@ class Listener
     protected $event;
 
     /**
+     * @var resource|int
+     */
+    protected $fd;
+
+    /**
+     * @var mixed
+     */
+    protected $argument;
+
+    /**
      * @var callable
      */
     protected $callback;
@@ -32,29 +42,43 @@ class Listener
     protected $name;
 
     /**
-     * @var resource|int
-     */
-    protected $fd;
-
-    /**
      * @var int
      */
     protected $what;
-
-    /**
-     * @var mixed
-     */
-    protected $data;
 
     public function __construct($fd, $what, $arg = null)
     {
         $this->fd = $fd;
         $this->what = $what;
-        $this->arg = $arg;
+        $this->argument = $arg;
+    }
+
+    public static function signal($signal, $arg = null)
+    {
+        return new static($signal, \Event::SIGNAL, $arg);
+    }
+
+    public static function timer($what, $arg = null)
+    {
+        return new static(-1, $what, $arg);
+    }
+
+    public function name()
+    {
+        return $this->name;
+    }
+
+    public function argument()
+    {
+        return $this->argument;
     }
 
     public function listen($timeout = null)
     {
+        if ( ! $this->base) {
+            throw new Exception("Aurora\\Event\\Listener::listen(): need to set an event base");
+        }
+
         $this->event = new \Event($this->base, $this->fd, $this->what, $this->callback, $this);
         if (null === $timeout) {
             $this->event->add();
@@ -63,20 +87,13 @@ class Listener
         }
     }
 
-    public function name()
-    {
-        return $this->name;
-    }
-
-    public function data()
-    {
-        return $this->data;
-    }
-
     public function delete()
     {
         if (is_int($this->fd)) {
-            $this->event->delSignal();
+            if ($this->fd == -1)
+                $this->event->delTimer();
+            else
+                $this->event->delSignal();
         } else {
             $this->event->del();
         }
@@ -87,18 +104,23 @@ class Listener
         $this->base = $base;
     }
 
-    public function setData($data)
-    {
-        $this->data = $data;
-    }
-
-    public function setListenName($name)
+    public function setName($name)
     {
         $this->name = $name;
     }
 
+    public function setArgument($arg)
+    {
+        $this->argument = $arg;
+    }
+
     public function setCallback($callback)
     {
+        if ( ! is_callable($callback)) {
+            throw new Exception("Aurora\\Event\\Listener::setCallback(): 
+                                need a valid callback, give a " . gettype($this->callback));
+        }
+
         $this->callback = $callback;
     }
 

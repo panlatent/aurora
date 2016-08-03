@@ -16,8 +16,40 @@ trait EventManager
      */
     protected $event;
 
-    public function setEventManager(Dispatcher $dispatcher)
+    /**
+     * @var \Aurora\Event\EventAcceptor
+     */
+    protected $eventAcceptor;
+
+    /**
+     * @return \Aurora\Event\Dispatcher
+     */
+    public function event()
+    {
+        return $this->event;
+    }
+
+    /**
+     * @return \Aurora\Event\EventAcceptor
+     */
+    public function eventAcceptor()
+    {
+        return $this->eventAcceptor;
+    }
+
+    /**
+     * @param \Aurora\Event\Dispatcher $dispatcher
+     */
+    public function setEvent(Dispatcher $dispatcher)
     {
         $this->event = $dispatcher;
+    }
+
+    /**
+     * @param \Aurora\Event\EventAcceptor $eventAcceptor
+     */
+    public function setEventAcceptor(EventAcceptor $eventAcceptor)
+    {
+        $this->eventAcceptor = $eventAcceptor;
     }
 }

@@ -9,13 +9,7 @@
 
 namespace Aurora\Event;
 
-interface EventManageable
+class Exception extends \Aurora\Exception
 {
-    public function event();
 
-    public function eventAcceptor();
-
-    public function setEvent(Dispatcher $dispatcher);
-
-    public function setEventAcceptor(EventAcceptor $eventAcceptor);
 }

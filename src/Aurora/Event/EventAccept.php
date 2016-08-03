@@ -17,6 +17,10 @@ trait EventAccept
     {
         $methodName = $this->getAcceptEventMethodName($name);
 
+        if ( ! method_exists($this, $methodName) || ! is_callable([$this, $methodName])) {
+            return;
+        }
+
         call_user_func_array([$this, $methodName], $params);
     }
 

@@ -63,23 +63,47 @@ class Dispatcher
 
     public function bind($name, $callback)
     {
+        if ( ! is_callable($callback) && ( ! is_object($callback) || ! $callback instanceof EventAcceptable)) {
+            throw new Exception('Aurora\\Event\\Dispatcher::bind(): expects parameter 1 to be a valid callback
+                                or implements Aurora\\Event\\EventAcceptable, give a ' . gettype($callback));
+        }
+
         if ( ! is_object($callback)) {
             $callback = (object)['callback' => $callback];
         }
         $this->binds->add($name, $callback);
     }
 
-    public function forward($fd, $what, Listener $listener)
+    public function forward()
     {
-        $this->fire($listener->name(), [$fd, $what, $listener]);
+        switch ($num = func_num_args()) {
+            case 1:
+                $listener = func_get_arg(0);
+                $this->fire($listener->name(), [$listener]);
+                break;
+            case 2:
+                $signal = func_get_arg(0);
+                $listener = func_get_arg(1);
+                $this->fire($listener->name(), [$signal, $listener]);
+                break;
+            case 3:
+                $fd = func_get_arg(0);
+                $what = func_get_arg(1);
+                $listener = func_get_arg(2);
+                $this->fire($listener->name(), [$fd, $what, $listener]);
+                break;
+            default:
+                throw new Exception("Aurora\\Event\\Dispatcher::forward(): unable to forward the Libevent event,
+                                    it is required to accept 1 to 3 arguments, give $num arguments");
+        }
     }
 
     public function listen($name, Listener $listener, $auto = true)
     {
         $this->listeners->add($name, $listener);
         $listener->setEventBase($this->base);
+        $listener->setName($name);
         $listener->setCallback([$this, 'forward']);
-        $listener->setListenName($name);
         if ($auto) {
             $listener->listen();
         }
@@ -103,9 +127,10 @@ class Dispatcher
         }
     }
 
-    public function reInit()
+    public function reset()
     {
         $this->base->reInit();
+        $this->binds = new Container();
         $this->listeners = new Container();
     }
 
