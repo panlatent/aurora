@@ -9,10 +9,15 @@
 
 namespace Aurora;
 
+use Aurora\Client\Events;
 use Aurora\Event\Dispatcher as EventDispatcher;
+use Aurora\Event\EventManageable;
+use Aurora\Event\EventManager;
 
-class Client
+class Client implements EventManageable
 {
+    use EventManager;
+
     protected $worker;
 
     protected $event;
@@ -27,6 +32,10 @@ class Client
         $this->event = $event;
         $this->socket = $socket;
         $this->pipeline = $pipeline;
+
+        $this->eventAcceptor = new Events($this);
+        $this->eventAcceptor->setEvent($event);
+        $this->eventAcceptor->register();
 
         $this->pipeline->bind('client', $this);
         $this->pipeline->open();
