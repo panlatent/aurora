@@ -9,16 +9,7 @@
 
 namespace Aurora;
 
-use Aurora\Config\Configurable;
-
-abstract class Config implements Configurable
+class ServerConfig extends Config
 {
-    final public function __construct()
-    {
-    }
 
-    public function __set($name, $value)
-    {
-        $this->$name = $value;
-    }
 }

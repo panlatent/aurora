@@ -9,16 +9,9 @@
 
 namespace Aurora;
 
-use Aurora\Config\Configurable;
-
-abstract class Config implements Configurable
+class ClientConfig extends Config
 {
-    final public function __construct()
-    {
-    }
+    public $socket_first_wait_timeout = 5;
 
-    public function __set($name, $value)
-    {
-        $this->$name = $value;
-    }
+    public $socket_last_wait_timeout = 5;
 }

@@ -9,7 +9,6 @@
 
 namespace Aurora\Console;
 
-use Aurora\Config;
 use Generator;
 
 class Application extends \Symfony\Component\Console\Application

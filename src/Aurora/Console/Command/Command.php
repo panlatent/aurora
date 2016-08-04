@@ -9,7 +9,7 @@
 
 namespace Aurora\Console\Command;
 
-use Aurora\Config;
+use Aurora\Console\Config;
 use Aurora\Console\Daemon;
 use Aurora\Console\Exception;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;

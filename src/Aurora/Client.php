@@ -9,16 +9,20 @@
 
 namespace Aurora;
 
+use Aurora\Config\ConfigManageable;
 use Aurora\Client\Events;
+use Aurora\Config\ConfigManager;
 use Aurora\Event\Dispatcher as EventDispatcher;
 use Aurora\Event\EventManageable;
 use Aurora\Event\EventManager;
 use Aurora\Timer\TimestampManageable;
 use Aurora\Timer\TimestampManager;
 
-class Client implements EventManageable, TimestampManageable
+class Client implements EventManageable, ConfigManageable, TimestampManageable
 {
-    use EventManager, TimestampManager;
+    use EventManager, ConfigManager, TimestampManager;
+
+    protected $config;
 
     protected $worker;
 
@@ -28,12 +32,13 @@ class Client implements EventManageable, TimestampManageable
 
     protected $pipeline;
 
-    public function __construct(Worker $worker, EventDispatcher $event, $socket, Pipeline $pipeline)
+    public function __construct(Worker $worker, EventDispatcher $event, $socket, Pipeline $pipeline, Config $config = null)
     {
         $this->worker = $worker;
         $this->event = $event;
         $this->socket = $socket;
         $this->pipeline = $pipeline;
+        $this->config = $config ?? new ClientConfig();
         $this->timestamp = $worker->timestamp();
         $this->timestamp->mark(ServerTimestampType::ClientStart);
 
@@ -45,9 +50,9 @@ class Client implements EventManageable, TimestampManageable
         $this->pipeline->open();
     }
 
-    public function pipeline()
+    public function worker()
     {
-        return $this->pipeline;
+        $this->worker;
     }
 
     public function socket()
@@ -55,9 +60,10 @@ class Client implements EventManageable, TimestampManageable
         return $this->socket;
     }
 
-    public function worker()
+
+    public function pipeline()
     {
-        $this->worker;
+        return $this->pipeline;
     }
 
     public function close()

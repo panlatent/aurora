@@ -7,18 +7,19 @@
  * @license https://opensource.org/licenses/MIT
  */
 
-namespace Aurora;
+namespace Aurora\Config;
 
-use Aurora\Config\Configurable;
-
-abstract class Config implements Configurable
+trait ConfigManager
 {
-    final public function __construct()
+    protected $config;
+
+    public function config()
     {
+        return $this->config;
     }
 
-    public function __set($name, $value)
+    public function setConfig(Configurable $config)
     {
-        $this->$name = $value;
+        $this->config = $config;
     }
 }

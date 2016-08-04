@@ -9,8 +9,6 @@
 
 namespace Aurora\Console;
 
-use Aurora\Config;
-
 class Daemon
 {
     /**
