@@ -23,6 +23,13 @@ class TimestampMarker
         return isset($this->marks[$name]);
     }
 
+    public function get($name, $default = 0)
+    {
+        if ( ! $this->isset($name)) return $default;
+
+        return $this->marks[$name];
+    }
+
     public function mark($name, $microsecond = 0)
     {
         if ( ! $microsecond) $microsecond = microtime(true);
