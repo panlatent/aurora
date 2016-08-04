@@ -14,16 +14,18 @@ use Aurora\Event\EventAccept;
 use Aurora\Event\EventAcceptable;
 use Aurora\Event\Listener;
 use Aurora\Event\SignalAcceptable;
+use Aurora\Timer\TimestampManageable;
+use Aurora\Timer\TimestampManager;
 use Aurora\Timer\TimestampMarker;
 
-class Server implements EventAcceptable, SignalAcceptable
+class Server implements EventAcceptable, SignalAcceptable, TimestampManageable
 {
     const MASTER = 1;
     const WORKER = 2;
     const EVENT_SOCKET_ACCEPT = 'socket:accept';
     const EVENT_SIGNAL_ACCEPT = 'signal:accept';
 
-    use EventAccept;
+    use EventAccept, TimestampManager;
 
     /**
      * @var \Aurora\Event\Dispatcher
@@ -88,11 +90,6 @@ class Server implements EventAcceptable, SignalAcceptable
     public function type()
     {
         return $this->type;
-    }
-
-    public function timestamp()
-    {
-        return $this->timestamp;
     }
 
     public function bind($address, $port)
@@ -189,11 +186,6 @@ class Server implements EventAcceptable, SignalAcceptable
     public function setType($type)
     {
         $this->type = $type;
-    }
-
-    public function setTimestamp(TimestampMarker $timestampMarker)
-    {
-        $this->timestamp = $timestampMarker;
     }
 
     protected function addSignalEvents(array $signals)

@@ -14,12 +14,14 @@ use Aurora\Event\EventAccept;
 use Aurora\Event\EventAcceptable;
 use Aurora\Event\EventManageable;
 use Aurora\Event\Listener;
+use Aurora\Timer\TimestampManageable;
+use Aurora\Timer\TimestampManager;
 
-class Worker implements EventAcceptable
+class Worker implements EventAcceptable, TimestampManageable
 {
     const EVENT_SOCKET_READ = 'socket:read';
 
-    use EventAccept;
+    use EventAccept, TimestampManager;
 
     protected $server;
 
@@ -48,6 +50,8 @@ class Worker implements EventAcceptable
             $this->server = $server;
             $this->socket = $socket;
             $this->event = $event;
+            $this->timestamp = $server->timestamp();
+            $this->timestamp->mark(ServerTimestampType::WorkerStart);
 
             $this->event->reset();
             $this->event->bind(static::EVENT_SOCKET_READ, $this);
@@ -74,6 +78,11 @@ class Worker implements EventAcceptable
         return $this->pid;
     }
 
+    public function server()
+    {
+        return $this->server;
+    }
+
     public function onRead($socket, $what, Listener $listener)
     {
         /** @var \Aurora\Client $client */
@@ -89,6 +98,9 @@ class Worker implements EventAcceptable
             $listener->delete();
             $client->close();
         } else {
+            if ( ! $this->timestamp->isset(ServerTimestampType::SocketFirstRead)) {
+                $this->timestamp->mark(ServerTimestampType::SocketFirstRead);
+            }
             $client->pipeline()->append($segment);
         }
     }

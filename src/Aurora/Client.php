@@ -13,10 +13,12 @@ use Aurora\Client\Events;
 use Aurora\Event\Dispatcher as EventDispatcher;
 use Aurora\Event\EventManageable;
 use Aurora\Event\EventManager;
+use Aurora\Timer\TimestampManageable;
+use Aurora\Timer\TimestampManager;
 
-class Client implements EventManageable
+class Client implements EventManageable, TimestampManageable
 {
-    use EventManager;
+    use EventManager, TimestampManager;
 
     protected $worker;
 
@@ -32,6 +34,8 @@ class Client implements EventManageable
         $this->event = $event;
         $this->socket = $socket;
         $this->pipeline = $pipeline;
+        $this->timestamp = $worker->timestamp();
+        $this->timestamp->mark(ServerTimestampType::ClientStart);
 
         $this->createEventAcceptor();
         $this->eventAcceptor->setEvent($this->event);
@@ -49,6 +53,11 @@ class Client implements EventManageable
     public function socket()
     {
         return $this->socket;
+    }
+
+    public function worker()
+    {
+        $this->worker;
     }
 
     public function close()
