@@ -56,7 +56,14 @@ class TimestampMarker
         $this->marks = [];
     }
 
-    public function isInRange($min, $max)
+    public static function interval($timestamp, $now = 0)
+    {
+        if ( ! $now) $now = microtime(true);
+
+        return ($now - $timestamp);
+    }
+
+    public static function isInRange($min, $max)
     {
 
     }
