@@ -14,6 +14,7 @@ use Aurora\Event\EventAccept;
 use Aurora\Event\EventAcceptable;
 use Aurora\Event\Listener;
 use Aurora\Event\SignalAcceptable;
+use Aurora\Timer\TimestampMarker;
 
 class Server implements EventAcceptable, SignalAcceptable
 {
@@ -50,14 +51,22 @@ class Server implements EventAcceptable, SignalAcceptable
     protected $type = self::MASTER;
 
     /**
+     * @var \Aurora\Timer\TimestampMarker
+     */
+    protected $timestamp;
+
+    /**
      * @var array
      */
     protected $workerPidStore = [];
 
-    public function __construct()
+    public function __construct(EventDispatcher $event = null, $socket = null, TimestampMarker $timestamp = null)
     {
-        $this->createEvent();
-        $this->createSocket();
+        $this->event = $event ?? $this->createEvent();
+        $this->socket = $socket ?? $this->createSocket();
+        $this->timestamp = $timestamp ?? $this->createTimestampMarker();
+
+        $this->addSignalEvents([SIGTERM, SIGUSR1, SIGUSR2, SIGCHLD]);
     }
 
     public function __destruct()
@@ -81,6 +90,11 @@ class Server implements EventAcceptable, SignalAcceptable
         return $this->type;
     }
 
+    public function timestamp()
+    {
+        return $this->timestamp;
+    }
+
     public function bind($address, $port)
     {
         if ( ! @socket_bind($this->socket, $address, $port)) {
@@ -97,16 +111,18 @@ class Server implements EventAcceptable, SignalAcceptable
     {
         if ($this->started) {
             throw new Exception("Server has been marked as the start state");
-        } elseif ( ! $this->pipeline) {
-            $this->pipeline = new Pipeline();
         }
 
         $this->started = true;
+        $this->timestamp->mark(ServerTimestampType::ServerStart);
+
+        if ( ! $this->pipeline) {
+            $this->pipeline = new Pipeline();
+        }
         $this->event->listen(static::EVENT_SOCKET_ACCEPT,
             new Listener($this->socket, \Event::READ | \Event::PERSIST));
 
         $state = $this->event->base()->dispatch();
-
         if (static::WORKER === $this->type) {
             exit(0);
         }
@@ -120,6 +136,7 @@ class Server implements EventAcceptable, SignalAcceptable
             throw new Exception("Server is marked as stopped");
         }
         $this->started = false;
+        $this->timestamp->mark(ServerTimestampType::ServerStop);
 
         return $this->event->base()->stop();
     }
@@ -174,6 +191,11 @@ class Server implements EventAcceptable, SignalAcceptable
         $this->type = $type;
     }
 
+    public function setTimestamp(TimestampMarker $timestampMarker)
+    {
+        $this->timestamp = $timestampMarker;
+    }
+
     protected function addSignalEvents(array $signals)
     {
         foreach ($signals as $signal) {
@@ -188,16 +210,24 @@ class Server implements EventAcceptable, SignalAcceptable
 
     protected function createEvent()
     {
-        $this->event = new EventDispatcher();
-        $this->event->bind(static::EVENT_SOCKET_ACCEPT, $this);
-        $this->event->bind(static::EVENT_SIGNAL_ACCEPT, [$this, SignalAcceptable::EVENT_SIGNAL_CALLBACK]);
-        $this->addSignalEvents([SIGTERM, SIGUSR1, SIGUSR2, SIGCHLD]);
+        $event = new EventDispatcher();
+        $event->bind(static::EVENT_SOCKET_ACCEPT, $this);
+        $event->bind(static::EVENT_SIGNAL_ACCEPT, [$this, SignalAcceptable::EVENT_SIGNAL_CALLBACK]);
+
+        return $event;
     }
 
     protected function createSocket()
     {
-        $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-        socket_set_option($this->socket, SOL_SOCKET, SO_REUSEADDR, 1);
-        socket_set_nonblock($this->socket);
+        $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+        socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 1);
+        socket_set_nonblock($socket);
+
+        return $socket;
+    }
+
+    protected function createTimestampMarker()
+    {
+        return new TimestampMarker();
     }
 }
