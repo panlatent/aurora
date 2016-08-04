@@ -35,7 +35,7 @@ class Events extends EventAcceptor
 
     public function register()
     {
-        $this->timer->insert(function() { // SocketInitWaitTimeout
+        $this->timer->insert(function() { // Socket init wait timeout
             $timestamp = $this->bind->timestamp();
             if ( ! ($socketFirstReadUT = $timestamp->get(ServerTimestampType::SocketFirstRead))) { // HTTP Connection first request timeout
                 $interval = TimestampMarker::interval($timestamp->get(ServerTimestampType::ClientStart));
@@ -44,7 +44,7 @@ class Events extends EventAcceptor
                 }
             }
         });
-        $this->timer->insert(function() {
+        $this->timer->insert(function() { // Socket complete read wait timeout
             $timestamp = $this->bind->timestamp();
             if (($socketLastReadUT = $timestamp->get(ServerTimestampType::SocketLastRead))) {
                 $interval = TimestampMarker::interval($socketLastReadUT);

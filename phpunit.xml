@@ -10,6 +10,6 @@
          stopOnFailure="false"
          syntaxCheck="false">
     <testsuite name="Aurora Test Suite">
-        <directory>./tests/</directory>
+        <directory>./tests/unit/</directory>
     </testsuite>
 </phpunit>

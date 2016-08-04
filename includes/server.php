@@ -22,30 +22,19 @@ foreach ($listens as $listen) {
 $server->listen();
 
 $pipeline = Server::createMatchPipeline();
-$pipeline
-    ->pipe(function(Request $request) {
+$pipeline->pipe(function(Request $request) {
     ob_start();
     require __DIR__ . '/../htdocs/index.php';
     return ob_get_clean();
-})->pipe(function() {
-    $response = Response::factory();
-    $response->setRawBody('<html><body>' . yield . '</body></html>');
-    return $response;
-})->pipe(function(Response $response, Pipeline $pipe) {
-    $pipe->client()->send($response->getContent());
 });
-
-//$responsePipeline =
-//$responsePipeline->pipe(function () {
-//    $response = Response::factory();
-//    $response->setRawBody('<html><body>' . yield . '</body></html>');
-//
-//    return $response;
-//})->pipe(function () {
-//
-//});
-
-//$pipeline->join($responsePipeline);
+$pipeline->pipe(function() {
+    $response = Response::factory();
+    $response->setRawBody(yield);
+    return $response;
+});
+$pipeline->pipe(function(Response $response, Pipeline $pipe) {
+    $pipe->data('client')->send($response->getContent());
+});
 
 $server->setPipeline($pipeline);
 $server->start();

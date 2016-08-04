@@ -159,6 +159,16 @@ class Request implements Producible
         return $this->rawBody;
     }
 
+    public function isPermanenceConnection()
+    {
+        $version = $this->firstLine->version(true);
+        if (version_compare($version, '1.0', '<=')) {
+            return ('keep-alive' === $this->header->get('HTTP_CONNECTION', false));
+        } else {
+            return ('close' !== $this->header->get('HTTP_CONNECTION', true));
+        }
+    }
+
     protected function parseRawBody()
     {
         if ($this->firstLine->isEmptyBody()) {

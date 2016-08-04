@@ -53,7 +53,12 @@ class Pipeline implements EventAcceptable, EventManageable
     }
 
     /**
-     * @param $callback
+     * Create a pipeline processor.
+     *
+     * (!) Must ensure that the callback function accepts the parameter type correctly,
+     * otherwise it may cause an unknown exception. May be wrong: \EventBase::dispatcher().
+     *
+     * @param callable|\Generator $callback
      *
      * @return $this
      * @throws \Aurora\Pipeline\Exception

@@ -7,11 +7,9 @@
  * @license https://opensource.org/licenses/MIT
  */
 
-namespace Aurora;
+namespace Aurora\Http;
 
-class ClientConfig extends Config
+class ClientConfig extends \Aurora\ClientConfig
 {
-    public $socket_first_wait_timeout = 10;
-
-    public $socket_last_wait_timeout = 10;
+    public $permanent_connection_wait_timeout = 5;
 }

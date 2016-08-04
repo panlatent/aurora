@@ -15,8 +15,8 @@ class ServerTimestampType extends TimestampType
 {
     const ServerStart = 0;
     const ServerStop = 1;
-    const WorkerStart = 100;
-    const ClientStart = 200;
-    const SocketFirstRead = 300;
-    const SocketLastRead = 301;
+    const WorkerStart = 2;
+    const ClientStart = 3;
+    const SocketFirstRead = 4;
+    const SocketLastRead = 5;
 }

@@ -37,13 +37,9 @@ class TimestampMarker
         $this->marks[$name] = $microsecond;
     }
 
-    public function update($name, $microsecond = 0)
+    public function update($name)
     {
-        if ( ! $this->isset($name)) {
-            throw new Exception("");
-        }
-
-        $this->marks[$name] = $microsecond ?: microtime(true);
+        $this->marks[$name] = microtime(true);
     }
 
     public function unset($name)
@@ -63,8 +59,13 @@ class TimestampMarker
         return ($now - $timestamp);
     }
 
-    public static function isInRange($min, $max)
+    public static function intervalEqual($expected, $actual, $mistake = 0)
     {
+        return ($actual >= $expected - $mistake && $actual <= $expected + $mistake);
+    }
 
+    public static function inIntervalRange($interval, $min, $max, $mistake = 0)
+    {
+        return ($interval >= $min - $mistake && $interval <= $max + $mistake);
     }
 }

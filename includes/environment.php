@@ -21,3 +21,7 @@ foreach (Aurora::EXTENSIONS as $extension) {
         die("This package require $extension extension\n");
     }
 }
+
+error_reporting(E_ALL);
+//set_error_handler('Aurora\Exception\Manager::throwErrorExceptionHandler', E_ALL);
+//set_exception_handler('Aurora\Exception\Manager::throwErrorExceptionHandler');

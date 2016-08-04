@@ -63,20 +63,27 @@ class Listener
         return new static(-1, $what, $arg);
     }
 
-    public function name()
-    {
-        return $this->name;
-    }
-
     public function argument()
     {
         return $this->argument;
+    }
+
+    public function event()
+    {
+        return $this->event;
+    }
+
+    public function name()
+    {
+        return $this->name;
     }
 
     public function listen($timeout = null)
     {
         if ( ! $this->base) {
             throw new Exception("Aurora\\Event\\Listener::listen(): need to set an event base");
+        } elseif ( !is_callable($this->callback)) {
+            throw new Exception("Aurora\\Event\\Listener::listen(): need to set a callback");
         }
 
         $this->event = new \Event($this->base, $this->fd, $this->what, $this->callback, $this);

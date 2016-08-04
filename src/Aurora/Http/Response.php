@@ -11,7 +11,6 @@ namespace Aurora\Http;
 
 class Response implements Producible
 {
-
     protected $status;
     protected $version;
     protected $header;

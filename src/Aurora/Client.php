@@ -38,11 +38,11 @@ class Client implements EventManageable, ConfigManageable, TimestampManageable
         $this->event = $event;
         $this->socket = $socket;
         $this->pipeline = $pipeline;
-        $this->config = $config ?? new ClientConfig();
+        $this->config = $config ?? $this->createConfig();
         $this->timestamp = $worker->timestamp();
         $this->timestamp->mark(ServerTimestampType::ClientStart);
 
-        $this->createEventAcceptor();
+        $this->eventAcceptor = $this->createEventAcceptor();
         $this->eventAcceptor->setEvent($this->event);
         $this->eventAcceptor->register();
 
@@ -59,7 +59,6 @@ class Client implements EventManageable, ConfigManageable, TimestampManageable
     {
         return $this->socket;
     }
-
 
     public function pipeline()
     {
@@ -79,9 +78,14 @@ class Client implements EventManageable, ConfigManageable, TimestampManageable
         socket_write($this->socket, $content);
     }
 
+    protected function createConfig()
+    {
+        return new ClientConfig();
+    }
+
     protected function createEventAcceptor()
     {
-        $this->eventAcceptor = new Events($this);
+        return new Events($this);
     }
 
 }

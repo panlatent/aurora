@@ -26,6 +26,8 @@ class Dispatcher
      */
     protected $listeners;
 
+    protected $events;
+
     public function __construct()
     {
         $this->base = new \EventBase();
@@ -106,6 +108,7 @@ class Dispatcher
         $listener->setCallback([$this, 'forward']);
         if ($auto) {
             $listener->listen();
+            $this->events[] = $listener->event();
         }
     }
 
