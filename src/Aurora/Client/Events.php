@@ -37,10 +37,18 @@ class Events extends EventAcceptor
     {
         $this->timer->insert(function() { // SocketInitWaitTimeout
             $timestamp = $this->bind->timestamp();
-            $timestamp->get(ServerTimestampType::SocketFirstRead);
             if ( ! ($socketFirstReadUT = $timestamp->get(ServerTimestampType::SocketFirstRead))) { // HTTP Connection first request timeout
                 $interval = TimestampMarker::interval($timestamp->get(ServerTimestampType::ClientStart));
                 if ($interval >= $this->bind->config()->socket_first_wait_timeout) {
+                    $this->bind->close();
+                }
+            }
+        });
+        $this->timer->insert(function() {
+            $timestamp = $this->bind->timestamp();
+            if (($socketLastReadUT = $timestamp->get(ServerTimestampType::SocketLastRead))) {
+                $interval = TimestampMarker::interval($socketLastReadUT);
+                if ($interval >= $this->bind->config()->socket_last_wait_timeout) {
                     $this->bind->close();
                 }
             }

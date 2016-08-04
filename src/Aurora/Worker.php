@@ -101,6 +101,7 @@ class Worker implements EventAcceptable, TimestampManageable
             if ( ! $this->timestamp->isset(ServerTimestampType::SocketFirstRead)) {
                 $this->timestamp->mark(ServerTimestampType::SocketFirstRead);
             }
+            $this->timestamp->mark(ServerTimestampType::SocketLastRead);
             $client->pipeline()->append($segment);
         }
     }
