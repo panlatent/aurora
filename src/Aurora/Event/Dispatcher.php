@@ -26,8 +26,6 @@ class Dispatcher
      */
     protected $listeners;
 
-    protected $events;
-
     public function __construct()
     {
         $this->base = new \EventBase();
@@ -78,25 +76,31 @@ class Dispatcher
 
     public function forward()
     {
-        switch ($num = func_num_args()) {
-            case 1:
-                $listener = func_get_arg(0);
-                $this->fire($listener->name(), [$listener]);
-                break;
-            case 2:
-                $signal = func_get_arg(0);
-                $listener = func_get_arg(1);
-                $this->fire($listener->name(), [$signal, $listener]);
-                break;
-            case 3:
-                $fd = func_get_arg(0);
-                $what = func_get_arg(1);
-                $listener = func_get_arg(2);
-                $this->fire($listener->name(), [$fd, $what, $listener]);
-                break;
-            default:
-                throw new Exception("Aurora\\Event\\Dispatcher::forward(): unable to forward the Libevent event,
+        try {
+            switch ($num = func_num_args()) {
+                case 1:
+                    $listener = func_get_arg(0);
+                    $this->fire($listener->name(), [$listener]);
+                    break;
+                case 2:
+                    $signal = func_get_arg(0);
+                    $listener = func_get_arg(1);
+                    $this->fire($listener->name(), [$signal, $listener]);
+                    break;
+                case 3:
+                    $fd = func_get_arg(0);
+                    $what = func_get_arg(1);
+                    $listener = func_get_arg(2);
+                    $this->fire($listener->name(), [$fd, $what, $listener]);
+                    break;
+                default:
+                    throw new Exception("Aurora\\Event\\Dispatcher::forward(): unable to forward the Libevent event,
                                     it is required to accept 1 to 3 arguments, give $num arguments");
+            }
+        } catch (\Throwable $ex) {
+            var_dump($ex);
+            echo $ex->getMessage();
+            die();
         }
     }
 
@@ -108,7 +112,6 @@ class Dispatcher
         $listener->setCallback([$this, 'forward']);
         if ($auto) {
             $listener->listen();
-            $this->events[] = $listener->event();
         }
     }
 
