@@ -32,7 +32,7 @@ class Events extends \Aurora\Client\Events
                 $interval = TimestampMarker::interval($requestLastUT);
                 $timeout = $this->bind->config()->permanent_connection_wait_timeout;
                 if ($interval >= $timeout || TimestampMarker::intervalEqual($timeout, $interval, 0.25)) {
-                    $this->bind->close();
+                    $this->bind->declareClose();
                 }
             }
         });
