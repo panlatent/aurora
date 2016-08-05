@@ -98,9 +98,11 @@ class Dispatcher
                                     it is required to accept 1 to 3 arguments, give $num arguments");
             }
         } catch (\Throwable $ex) {
-            var_dump($ex);
-            echo $ex->getMessage();
-            die();
+            echo sprintf('"%s" in "%s:%d"', $ex->getMessage(), $ex->getFile(), $ex->getLine()), "\n";
+            echo $ex->getTraceAsString();
+            if ( ! $this->base()->gotStop()) {
+                $this->base()->stop();
+            }
         }
     }
 
