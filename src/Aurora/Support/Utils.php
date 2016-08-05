@@ -23,4 +23,13 @@ class Utils
 
         return $listens;
     }
+
+    public static function getUserGroupFromColonStyle($string)
+    {
+        if ( ! preg_match('/^(.*?)\s*(|:\s*(.*?))$/', $string, $userMatch)) {
+            return false;
+        }
+
+        return ['user' => $userMatch[1], 'group' => $userMatch[3] ?? ''];
+    }
 }

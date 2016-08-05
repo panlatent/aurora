@@ -25,7 +25,7 @@ $pipeline->pipe(function($content, Pipeline $pipe) {
     $pipe->data('client')->send($content);
 });
 $server = new Server();
-$server->bind('127.0.0.1', 10043);
+$server->bind('127.0.0.1', 10042);
 $server->listen();
 $server->setPipeline($pipeline);
 $server->start();

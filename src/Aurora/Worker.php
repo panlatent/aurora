@@ -9,17 +9,20 @@
 
 namespace Aurora;
 
+use Aurora\Config\ConfigManageable;
+use Aurora\Config\ConfigManager;
 use Aurora\Event\Dispatcher as EventDispatcher;
 use Aurora\Event\EventAccept;
 use Aurora\Event\EventAcceptable;
 use Aurora\Event\EventManageable;
 use Aurora\Event\Listener;
+use Aurora\Support\Posix;
 use Aurora\Timer\TimestampManageable;
 use Aurora\Timer\TimestampManager;
 
-class Worker implements EventAcceptable, TimestampManageable
+class Worker implements EventAcceptable, ConfigManageable, TimestampManageable
 {
-    use EventAccept, TimestampManager;
+    use EventAccept, ConfigManager, TimestampManager;
 
     protected $server;
 
@@ -29,7 +32,7 @@ class Worker implements EventAcceptable, TimestampManageable
 
     protected $socket;
 
-    public function __construct(Server $server, EventDispatcher $event, $socket)
+    public function __construct(Server $server, EventDispatcher $event, $socket, WorkerConfig $config = null)
     {
         if (-1 === ($this->pid = pcntl_fork())) {
             throw new Exception('Failed to create a work process');
@@ -39,14 +42,15 @@ class Worker implements EventAcceptable, TimestampManageable
 
         try {
             $server->setType(Server::WORKER);
-
+            $event->reset();
             $this->server = $server;
-            $this->socket = $socket;
             $this->event = $event;
+            $this->socket = $socket;
             $this->timestamp = $server->timestamp();
             $this->timestamp->mark(ServerTimestampType::WorkerStart);
+            $this->config = $config ?? new WorkerConfig();
 
-            $this->event->reset();
+            Posix::setUser($this->config->worker_user, $this->config->worker_user_group);
 
             $pipeline = $this->server->pipeline();
             $pipeline->bind('worker', $this);

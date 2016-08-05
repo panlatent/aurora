@@ -21,7 +21,7 @@ $application->addCommands([
     new ServerStatus(),
     new ServerRestart(),
 ]);
-$application->master(function (\Aurora\Console\Config $config) {
+$application->master(function ($config) {
     require __DIR__ . '/server.php';
 });
 $application->run();

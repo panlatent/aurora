@@ -9,16 +9,17 @@
 
 namespace Aurora\Console;
 
-class Daemon
-{
-    /**
-     * @var \Aurora\Config
-     */
-    protected $config;
+use Aurora\Config\ConfigManageable;
+use Aurora\Config\ConfigManager;
+use Aurora\Support\Posix;
 
-    public function __construct(Config $config)
+class Daemon implements ConfigManageable
+{
+    use ConfigManager;
+
+    public function __construct(DaemonConfig $config = null)
     {
-        $this->config = $config;
+        $this->config = $config ?? new DaemonConfig();
     }
 
     /**
@@ -44,18 +45,11 @@ class Daemon
         chdir('/');
         umask(0);
 
-        $user = $this->config->get('daemon.user', 'nobody');
-        if (false === ($userInfo = posix_getpwnam($user))) {
-            throw new Exception("Does not exist operating system user: $user");
-        }
-        if ( ! posix_setgid($userInfo['gid'])) { // 必须先设置GID, 再设置UID
-            throw new Exception("Unable to set GID: " . posix_strerror(posix_get_last_error()));
-        }
-        if ( ! posix_setuid($userInfo['uid'])) {
-            throw new Exception("Unable to set UID" . posix_strerror(posix_get_last_error()));
-        }
+        $user = $this->config->get('master_user', 'nobody');
+        $group = $this->config->get('master_user_group', '');
+        Posix::setUser($user, $group);
 
-        $filename = $this->config->get('daemon.pid', '/var/run/aurora.pid');
+        $filename = $this->config->get('pid_file_save_path', '/var/run/aurora.pid');
         if ( ! ($fd = @fopen($filename, 'w+'))) {
             throw new Exception("PID file creation failed" . error_get_last()['message']);
         } elseif ( ! flock($fd, LOCK_EX | LOCK_NB)) {
@@ -90,7 +84,7 @@ class Daemon
             return $cachePid;
         }
 
-        if ( ! is_file($filename = $this->config['daemon.pid'])) {
+        if ( ! is_file($filename = $this->config->get('pid_file_save_path'))) {
             return false;
         }
 

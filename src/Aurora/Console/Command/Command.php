@@ -9,8 +9,9 @@
 
 namespace Aurora\Console\Command;
 
-use Aurora\Console\Config;
+use Aurora\Config\FileConfig;
 use Aurora\Console\Daemon;
+use Aurora\Console\DaemonConfig;
 use Aurora\Console\Exception;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\InputArgument;
@@ -43,7 +44,8 @@ class Command extends \Symfony\Component\Console\Command\Command
                 throw new Exception("Could not find the configuration file: $configPath");
             }
 
-            $config = new Config($configPath);
+            FileConfig::create($configPath);
+            $config = new DaemonConfig();
         }
 
         $this->daemon = new Daemon($config);

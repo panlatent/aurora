@@ -15,6 +15,14 @@ abstract class Config implements Configurable
 {
     final public function __construct()
     {
+        $this->register();
+    }
+
+    public function get($name, $default = false)
+    {
+        if ( ! isset($this->$name)) return $default;
+
+        return $this->$name;
     }
 
     public function __set($name, $value)
@@ -25,5 +33,9 @@ abstract class Config implements Configurable
     public function __invoke($name)
     {
         return $this->$name;
+    }
+
+    protected function register()
+    {
     }
 }

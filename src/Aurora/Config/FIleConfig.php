@@ -7,27 +7,26 @@
  * @license https://opensource.org/licenses/MIT
  */
 
-namespace Aurora\Console;
+namespace Aurora\Config;
 
-class Config implements \ArrayAccess
+use Aurora\Config;
+
+class FileConfig implements \ArrayAccess
 {
+    /**
+     * @var \Aurora\Config\FileConfig
+     */
+    protected static $default;
+
     protected $values = [];
 
     public function __construct($pathname, $namespace = '')
     {
-        switch ($this->getExtension($pathname)) {
-            case 'php':
-                $config = require($pathname);
-                break;
-            case 'json':
-                $config = json_decode(file_get_contents($pathname), true);
-                break;
-            case 'ini':
-            default:
-                $config = parse_ini_string(file_get_contents($pathname), true);
+        if ( ! static::$default) {
+            static::$default = $this;
         }
 
-        if ( ! is_array($config)) {
+        if ( ! is_array($config = $this->loadFile($pathname))) {
             throw new Exception("Unable to parse configuration file: $pathname");
         }
 
@@ -38,16 +37,35 @@ class Config implements \ArrayAccess
         }
     }
 
-    protected function getExtension($pathname)
+    public static function create($pathname, $namespace = '')
     {
-        if (false === ($dotPos = strrpos($pathname, '.'))) {
-            return '';
+        static $paths = [];
+
+        if ( ! static::$default) {
+            $paths[$pathname] = $namespace;
+            return new static($pathname, $namespace);
+        } else if ( ! isset($paths[$pathname])) {
+            $paths[$pathname] = $namespace;
+            static::$default->merge(new static($pathname, $namespace));
         }
 
-        return substr($pathname, $dotPos + 1);
+        return static::$default;
     }
 
-    public function merge(Config $config)
+    /**
+     * @return \Aurora\Config\FileConfig
+     */
+    public static function default()
+    {
+        return static::$default;
+    }
+
+    public function inject(Config $config, $map = null, $onlyMap = false)
+    {
+        // @todo
+    }
+
+    public function merge(FileConfig $config)
     {
         $this->values = array_merge_recursive($this->values, $config->get());
     }
@@ -71,20 +89,6 @@ class Config implements \ArrayAccess
         return $values;
     }
 
-    protected function parseDotName($name)
-    {
-        if (false === (strpos($name, '.'))) {
-            return [$name];
-        }
-
-        return explode('.', trim($name, '.'));
-    }
-
-    public function offsetExists($offset)
-    {
-        return $this->isset($offset);
-    }
-
     public function isset($name)
     {
         $dotNames = $this->parseDotName($name);
@@ -100,16 +104,6 @@ class Config implements \ArrayAccess
         return true;
     }
 
-    public function offsetGet($offset)
-    {
-        return $this->get($offset);
-    }
-
-    public function offsetSet($offset, $value)
-    {
-        $this->set($offset, $value);
-    }
-
     public function set($name, $value)
     {
         $dotNames = $this->parseDotName($name);
@@ -123,11 +117,6 @@ class Config implements \ArrayAccess
             }
         }
         $values[$lastSubName] = $value;
-    }
-
-    public function offsetUnset($offset)
-    {
-        $this->unset($offset);
     }
 
     public function unset($name = '')
@@ -147,5 +136,60 @@ class Config implements \ArrayAccess
 
             unset($values);
         }
+    }
+
+    public function offsetExists($offset)
+    {
+        return $this->isset($offset);
+    }
+
+    public function offsetGet($offset)
+    {
+        return $this->get($offset);
+    }
+
+    public function offsetSet($offset, $value)
+    {
+        $this->set($offset, $value);
+    }
+
+    public function offsetUnset($offset)
+    {
+        $this->unset($offset);
+    }
+
+    protected function loadFile($pathname)
+    {
+        switch ($this->getExtension($pathname)) {
+            case 'php':
+                $config = @require($pathname);
+                break;
+            case 'json':
+                $config = @json_decode(file_get_contents($pathname), true);
+                break;
+            case 'ini':
+            default:
+                $config = @parse_ini_string(file_get_contents($pathname), true);
+        }
+
+        return $config;
+    }
+
+    protected function getExtension($pathname)
+    {
+        if (false === ($dotPos = strrpos($pathname, '.'))) {
+            return '';
+        }
+
+        return substr($pathname, $dotPos + 1);
+    }
+
+    protected function parseDotName($name)
+    {
+        if (false === (strpos($name, '.'))) {
+            return [$name];
+        }
+
+        return explode('.', trim($name, '.'));
     }
 }

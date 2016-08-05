@@ -10,7 +10,7 @@
 $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 echo "Test first read wait timeout: \n";
 $begin = microtime(true);
-socket_connect($socket, '127.0.0.1', 10043);
+socket_connect($socket, '127.0.0.1', 10042);
 while (socket_read($socket, 1024)) {
     sleep(1);
 }
