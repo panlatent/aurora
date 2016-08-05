@@ -19,7 +19,7 @@ class Events extends EventAcceptor
 {
     const EVENT_SOCKET_READ = 'client.socket:read';
     const EVENT_SOCKET_WRITE = 'client.socket:write';
-    const EVENT_TIMER = 'client.timer';
+    const EVENT_TIMER = 'client:timer';
 
     /**
      * @var \Aurora\Client
@@ -47,7 +47,7 @@ class Events extends EventAcceptor
             if ( ! ($socketFirstReadUT = $timestamp->get(ServerTimestampType::SocketFirstRead))) { // HTTP Connection first request timeout
                 $interval = TimestampMarker::interval($timestamp->get(ServerTimestampType::ClientStart));
                 if ($interval >= $this->bind->config()->socket_first_wait_timeout) {
-                    $this->bind->close();
+                    $this->bind->declareClose();
                 }
             }
         });
@@ -56,7 +56,7 @@ class Events extends EventAcceptor
             if (($socketLastReadUT = $timestamp->get(ServerTimestampType::SocketLastRead))) {
                 $interval = TimestampMarker::interval($socketLastReadUT);
                 if ($interval >= $this->bind->config()->socket_last_wait_timeout) {
-                    $this->bind->close();
+                    $this->bind->declareClose();
                 }
             }
         });
@@ -65,7 +65,7 @@ class Events extends EventAcceptor
         $listener->register(static::EVENT_SOCKET_READ);
         $listener->listen();
 
-        $timer = Listener::timer($this->event, \Event::TIMEOUT | \Event::PERSIST);
+        $timer = Listener::timer($this->event, true);
         $timer->register(static::EVENT_TIMER);
         $timer->listen(0.25);
     }

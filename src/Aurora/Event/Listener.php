@@ -66,6 +66,7 @@ class Listener
     public static function timer(Dispatcher $dispatcher, $isPersist = false, $arg = null)
     {
         $what = $isPersist ? \Event::TIMEOUT | \Event::PERSIST : \Event::TIMEOUT;
+
         return new static($dispatcher, -1, $what, $arg);
     }
 
