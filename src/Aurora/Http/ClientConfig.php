@@ -11,5 +11,5 @@ namespace Aurora\Http;
 
 class ClientConfig extends \Aurora\ClientConfig
 {
-    public $permanent_connection_wait_timeout = 5;
+    public $keep_alive_timeout = 60;
 }
