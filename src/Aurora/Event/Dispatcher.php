@@ -26,6 +26,11 @@ class Dispatcher
      */
     protected $listeners;
 
+    /**
+     * @var array
+     */
+    protected $declares;
+
     public function __construct()
     {
         $this->base = new \EventBase();
@@ -132,6 +137,15 @@ class Dispatcher
             }
             $this->listeners->unsetSub($name, $listener);
         }
+    }
+
+    public function declare($callback, $priority = 0)
+    {
+        $event = new \Event($this->base, -1, \Event::TIMEOUT, $callback);
+        $event->setPriority($priority);
+        $event->add(0);
+
+        $this->declares[] = $event;
     }
 
     public function listen($name, Listener $listener, $auto = true)

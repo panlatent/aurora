@@ -89,6 +89,16 @@ class Client implements EventManageable, ConfigManageable, TimestampManageable
         }
     }
 
+    /**
+     * Declare client will close, register a event to \EventBas::loop().
+     */
+    public function declareClose()
+    {
+        $this->event->declare(function() {
+           $this->close();
+        });
+    }
+
     public function send($content)
     {
         $this->writeBuffer->write($content);

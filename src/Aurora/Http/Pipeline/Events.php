@@ -71,7 +71,7 @@ class Events extends EventAcceptor
     public function onSend(Request $request)
     {
         if ( ! $request->isPermanenceConnection()) {
-            $this->bind->data('client')->close();
+            $this->bind->data('client')->declareClose();
         } else {
             // Empty
         }
