@@ -12,4 +12,6 @@ namespace Aurora\Config;
 interface Configurable
 {
     public function __set($name, $value);
+
+    public function __invoke($name);
 }

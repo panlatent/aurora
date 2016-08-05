@@ -21,4 +21,9 @@ abstract class Config implements Configurable
     {
         $this->$name = $value;
     }
+
+    public function __invoke($name)
+    {
+        return $this->$name;
+    }
 }
