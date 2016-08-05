@@ -16,12 +16,27 @@ use Aurora\Http\Client\Events as ClientEvents;
 
 class Client extends \Aurora\Client
 {
+    /**
+     * @var bool|null If value is null, mean first request not arrived.
+     */
+    protected $keepAlive;
+
     public function __construct(Worker $worker, Dispatcher $event, $socket, Pipeline $pipeline,
                                 Config $config = null, WriteBuffer $writeBuffer = null)
     {
         parent::__construct($worker, $event, $socket, $pipeline, $config, $writeBuffer);
 
         $this->writeBuffer->open();
+    }
+
+    public function keepAlive()
+    {
+        return $this->keepAlive;
+    }
+
+    public function setKeepAlive($isKeepAlive)
+    {
+        $this->keepAlive = $isKeepAlive;
     }
 
     protected function createConfig()

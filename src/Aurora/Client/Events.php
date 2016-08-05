@@ -34,33 +34,18 @@ class Events extends EventAcceptor
     public function __construct($dispatcher, $bind)
     {
         parent::__construct($dispatcher, $bind);
-        $this->timer = new TimerDispatcher();
+
         $this->event->bind(static::EVENT_SOCKET_READ, $this);
         $this->event->bind(static::EVENT_SOCKET_WRITE, $this);
         $this->event->bind(static::EVENT_TIMER, $this);
+
+        $this->timer = new TimerDispatcher();
+        $this->timer->insert([$this, 'onSocketInitWaitTimeoutTimer']);
+        $this->timer->insert([$this, 'onSocketReadWaitTimeoutTimer']);
     }
 
     public function register()
     {
-        $this->timer->insert(function() { // Socket init wait timeout
-            $timestamp = $this->bind->timestamp();
-            if ( ! ($socketFirstReadUT = $timestamp->get(ServerTimestampType::SocketFirstRead))) { // HTTP Connection first request timeout
-                $interval = TimestampMarker::interval($timestamp->get(ServerTimestampType::ClientStart));
-                if ($interval >= $this->bind->config()->socket_first_wait_timeout) {
-                    $this->bind->declareClose();
-                }
-            }
-        });
-        $this->timer->insert(function() { // Socket complete read wait timeout
-            $timestamp = $this->bind->timestamp();
-            if (($socketLastReadUT = $timestamp->get(ServerTimestampType::SocketLastRead))) {
-                $interval = TimestampMarker::interval($socketLastReadUT);
-                if ($interval >= $this->bind->config()->socket_last_wait_timeout) {
-                    $this->bind->declareClose();
-                }
-            }
-        });
-
         $listener = new Listener($this->event, $this->bind->socket(), \Event::READ | \Event::PERSIST, $this->bind);
         $listener->register(static::EVENT_SOCKET_READ);
         $listener->listen();
@@ -106,5 +91,27 @@ class Events extends EventAcceptor
     public function onWrite($socket, Listener $listener)
     {
         socket_write($socket, $listener->argument());
+    }
+
+    public function onSocketInitWaitTimeoutTimer()
+    {
+        $timestamp = $this->bind->timestamp();
+        if ( ! ($socketFirstReadUT = $timestamp->get(ServerTimestampType::SocketFirstRead))) { // HTTP Connection first request timeout
+            $interval = TimestampMarker::interval($timestamp->get(ServerTimestampType::ClientStart));
+            if ($interval >= $this->bind->config()->socket_first_wait_timeout) {
+                $this->bind->declareClose();
+            }
+        }
+    }
+
+    public function onSocketReadWaitTimeoutTimer()
+    {
+        $timestamp = $this->bind->timestamp();
+        if (($socketLastReadUT = $timestamp->get(ServerTimestampType::SocketLastRead))) {
+            $interval = TimestampMarker::interval($socketLastReadUT);
+            if ($interval >= $this->bind->config()->socket_last_wait_timeout) {
+                $this->bind->declareClose();
+            }
+        }
     }
 }

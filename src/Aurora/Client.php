@@ -100,7 +100,7 @@ class Client implements EventManageable, ConfigManageable, TimestampManageable
             $this->writeBuffer->flush();
         }
         $this->event->declare(function() {
-           $this->close();
+            $this->close();
         });
     }
 
