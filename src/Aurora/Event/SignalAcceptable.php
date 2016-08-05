@@ -11,7 +11,7 @@ namespace Aurora\Event;
 
 interface SignalAcceptable
 {
-    const EVENT_SIGNAL_CALLBACK = 'acceptSignal';
+    const EVENT_SIGNAL_CALLBACK = 'onSignal';
 
     /**
      * @param int   $signal
@@ -19,5 +19,5 @@ interface SignalAcceptable
      *
      * @return void
      */
-    public function acceptSignal($signal, $arg);
+    public function onSignal($signal, $arg);
 }

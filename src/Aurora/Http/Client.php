@@ -12,7 +12,7 @@ namespace Aurora\Http;
 use Aurora\Client\WriteBuffer;
 use Aurora\Config;
 use Aurora\Event\Dispatcher;
-use Aurora\Http\Client\Events;
+use Aurora\Http\Client\Events as ClientEvents;
 
 class Client extends \Aurora\Client
 {
@@ -31,6 +31,6 @@ class Client extends \Aurora\Client
 
     protected function createEventAcceptor()
     {
-        return new Events($this->event, $this);
+        return new ClientEvents($this->event, $this);
     }
 }

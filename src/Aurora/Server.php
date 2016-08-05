@@ -10,32 +10,19 @@
 namespace Aurora;
 
 use Aurora\Event\Dispatcher as EventDispatcher;
-use Aurora\Event\EventAccept;
-use Aurora\Event\EventAcceptable;
-use Aurora\Event\Listener;
-use Aurora\Event\SignalAcceptable;
+use Aurora\Event\EventManageable;
+use Aurora\Event\EventManager;
 use Aurora\Timer\TimestampManageable;
 use Aurora\Timer\TimestampManager;
 use Aurora\Timer\TimestampMarker;
+use Aurora\Worker\WorkerManager;
 
-class Server implements EventAcceptable, SignalAcceptable, TimestampManageable
+class Server implements EventManageable, TimestampManageable
 {
     const MASTER = 1;
     const WORKER = 2;
-    const EVENT_SOCKET_ACCEPT = 'socket:accept';
-    const EVENT_SIGNAL_ACCEPT = 'signal:accept';
 
-    use EventAccept, TimestampManager;
-
-    /**
-     * @var \Aurora\Event\Dispatcher
-     */
-    protected $event;
-
-    /**
-     * @var \Aurora\Pipeline
-     */
-    protected $pipeline;
+    use EventManager, TimestampManager;
 
     /**
      * @var bool
@@ -48,6 +35,11 @@ class Server implements EventAcceptable, SignalAcceptable, TimestampManageable
     protected $socket;
 
     /**
+     * @var \Aurora\Pipeline
+     */
+    protected $pipeline;
+
+    /**
      * @var int
      */
     protected $type = self::MASTER;
@@ -58,9 +50,9 @@ class Server implements EventAcceptable, SignalAcceptable, TimestampManageable
     protected $timestamp;
 
     /**
-     * @var array
+     * @var \Aurora\Worker\WorkerManager
      */
-    protected $workerPidStore = [];
+    protected $workerManager;
 
     public function __construct(EventDispatcher $event = null, $socket = null, TimestampMarker $timestamp = null)
     {
@@ -68,7 +60,8 @@ class Server implements EventAcceptable, SignalAcceptable, TimestampManageable
         $this->socket = $socket ?? $this->createSocket();
         $this->timestamp = $timestamp ?? $this->createTimestampMarker();
 
-        $this->addSignalEvents([SIGTERM, SIGUSR1, SIGUSR2, SIGCHLD]);
+        $this->eventAcceptor = $this->createEventAcceptor();
+        $this->workerManager = $this->createWorkerManager();
     }
 
     public function __destruct()
@@ -82,14 +75,29 @@ class Server implements EventAcceptable, SignalAcceptable, TimestampManageable
         return new Pipeline();
     }
 
+    public function createWorker($client)
+    {
+        return new Worker($this, $this->event, $client);
+    }
+
     public function pipeline()
     {
         return $this->pipeline;
     }
 
+    public function socket()
+    {
+        return $this->socket;
+    }
+
     public function type()
     {
         return $this->type;
+    }
+
+    public function workManage()
+    {
+        return $this->workerManager;
     }
 
     public function bind($address, $port)
@@ -116,9 +124,8 @@ class Server implements EventAcceptable, SignalAcceptable, TimestampManageable
         if ( ! $this->pipeline) {
             $this->pipeline = new Pipeline();
         }
-        $listener = new Listener($this->event, $this->socket, \Event::READ | \Event::PERSIST);
-        $listener->register(static::EVENT_SOCKET_ACCEPT);
-        $listener->listen();
+
+        $this->eventAcceptor->register();
 
         $state = $this->event->base()->dispatch();
         if (static::WORKER === $this->type) {
@@ -139,45 +146,6 @@ class Server implements EventAcceptable, SignalAcceptable, TimestampManageable
         return $this->event->base()->stop();
     }
 
-    public function onAccept($socket, $what, Listener $listener)
-    {
-        if ( ! $client = socket_accept($socket)) {
-            throw new Exception("Accept a socket connect failed");
-        }
-        socket_set_nonblock($client);
-
-        $worker = $this->createWorker($client);
-        if (static::MASTER === $this->type) {
-            $this->workerPidStore[] = $worker->pid();
-            socket_close($client);
-        }
-    }
-
-    public function acceptSignal($signal, $arg)
-    {
-        switch ($signal) {
-            case SIGTERM:
-                foreach ($this->workerPidStore as $pid) {
-                    posix_kill($pid, SIGKILL);
-                }
-                $this->event->base()->exit();
-                break;
-            case SIGUSR1: // @todo Workers Shard Memory Message
-                break;
-            case SIGUSR2: // @todo Daemon and Worker Pipeline Message
-                break;
-            case SIGCHLD:
-                while (($pid = pcntl_waitpid(-1, $status, WUNTRACED | WNOHANG)) > 0) {
-                    if (false !== ($key = array_search($pid, $this->workerPidStore))) {
-                        unset($this->workerPidStore[$key]);
-                    }
-                }
-                break;
-            default:
-                return;
-        }
-    }
-
     public function setPipeline(Pipeline $pipeline)
     {
         $this->pipeline = $pipeline;
@@ -189,27 +157,14 @@ class Server implements EventAcceptable, SignalAcceptable, TimestampManageable
         $this->type = $type;
     }
 
-    protected function addSignalEvents(array $signals)
-    {
-        foreach ($signals as $signal) {
-            $listener = Listener::signal($this->event, $signal);
-            $listener->register(static::EVENT_SIGNAL_ACCEPT);
-            $listener->listen();
-        }
-    }
-
-    protected function createWorker($client)
-    {
-        return new Worker($this, $this->event, $client);
-    }
-
     protected function createEvent()
     {
-        $event = new EventDispatcher();
-        $event->bind(static::EVENT_SOCKET_ACCEPT, $this);
-        $event->bind(static::EVENT_SIGNAL_ACCEPT, [$this, SignalAcceptable::EVENT_SIGNAL_CALLBACK]);
+        return new EventDispatcher();
+    }
 
-        return $event;
+    protected function createEventAcceptor()
+    {
+        return new Events($this->event, $this);
     }
 
     protected function createSocket()
@@ -221,8 +176,14 @@ class Server implements EventAcceptable, SignalAcceptable, TimestampManageable
         return $socket;
     }
 
+    protected function createWorkerManager()
+    {
+        return new WorkerManager();
+    }
+
     protected function createTimestampMarker()
     {
         return new TimestampMarker();
     }
+
 }

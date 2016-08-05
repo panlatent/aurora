@@ -11,7 +11,7 @@ namespace Aurora;
 
 use Aurora\Client\WriteBuffer;
 use Aurora\Config\ConfigManageable;
-use Aurora\Client\Events;
+use Aurora\Client\Events as ClientEvents;
 use Aurora\Config\ConfigManager;
 use Aurora\Event\Dispatcher as EventDispatcher;
 use Aurora\Event\EventManageable;
@@ -116,7 +116,7 @@ class Client implements EventManageable, ConfigManageable, TimestampManageable
 
     protected function createEventAcceptor()
     {
-        return new Events($this->event, $this);
+        return new ClientEvents($this->event, $this);
     }
 
     protected function createWriteBuffer()

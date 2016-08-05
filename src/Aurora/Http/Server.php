@@ -20,7 +20,7 @@ class Server extends \Aurora\Server
         return new Pipeline();
     }
 
-    protected function createWorker($client)
+    public function createWorker($client)
     {
         return new Worker($this, $this->event, $client);
     }

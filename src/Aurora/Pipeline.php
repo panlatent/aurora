@@ -14,7 +14,7 @@ use Aurora\Event\EventAcceptable;
 use Aurora\Event\EventManageable;
 use Aurora\Event\EventManager;
 use Aurora\Pipeline\Buffer;
-use Aurora\Pipeline\Events;
+use Aurora\Pipeline\Events as PipelineEvents;
 use Aurora\Pipeline\Exception;
 use Generator;
 
@@ -195,7 +195,7 @@ class Pipeline implements EventAcceptable, EventManageable
 
     protected function createEventAcceptor()
     {
-        return new Events($this->event, $this);
+        return new PipelineEvents($this->event, $this);
     }
 
 }
