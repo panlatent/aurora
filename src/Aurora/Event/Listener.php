@@ -78,7 +78,7 @@ class Listener
         return $this->name;
     }
 
-    public function listen($timeout = null)
+    public function listen($timeout = -1)
     {
         if ( ! $this->base) {
             throw new Exception("Aurora\\Event\\Listener::listen(): need to set an event base");
@@ -87,10 +87,8 @@ class Listener
         }
 
         $this->event = new \Event($this->base, $this->fd, $this->what, $this->callback, $this);
-        if (null === $timeout) {
-            $this->event->add();
-        } else {
-            $this->event->add($timeout);
+        if ( ! $this->event->add($timeout)) {
+            throw new Exception("event listener to listen a event failed");
         }
     }
 
