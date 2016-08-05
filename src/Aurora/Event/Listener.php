@@ -48,6 +48,11 @@ class Listener
      */
     protected $what;
 
+    /**
+     * @var int
+     */
+    protected $priority;
+
     public function __construct(Dispatcher $dispatcher, $fd, $what, $arg = null)
     {
         $this->dispatcher = $dispatcher;
@@ -126,6 +131,7 @@ class Listener
         $this->name = $name;
         $this->dispatcher->listeners()->add($name, $this);
         $this->event = new \Event($this->base, $this->fd, $this->what, $this->callback, $this);
+        $this->event->setPriority($this->priority);
 
         return $this;
     }
@@ -177,6 +183,11 @@ class Listener
         }
 
         $this->callback = $callback;
+    }
+
+    public function setriority($priority)
+    {
+        $this->priority = $priority;
     }
 
 }

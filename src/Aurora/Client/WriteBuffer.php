@@ -17,7 +17,7 @@ use Aurora\Event\Listener;
 class WriteBuffer implements EventAcceptable
 {
     const OUT_LENGTH = 1024;
-    const EVENT_BUFFER_FILLED = 'client.write.buffer:filled';
+    const EVENT_BUFFER_SEND = 'client.write.buffer:send';
 
     use EventAccept;
 
@@ -37,8 +37,7 @@ class WriteBuffer implements EventAcceptable
         $this->socket = $socket;
         $this->size = $size;
 
-        $this->event->bind('client.write.buffer:send', $this);
-        $this->event->bind('client.write.buffer:fill_send', $this);
+        $this->event->bind(static::EVENT_BUFFER_SEND, $this);
     }
 
     public function content()
@@ -95,7 +94,7 @@ class WriteBuffer implements EventAcceptable
     {
         if (null !== $this->buffer) {
             $listener = new Listener($this->event, $this->socket, \Event::WRITE);
-            $listener->register('client.write.buffer:send');
+            $listener->register(static::EVENT_BUFFER_SEND);
             $listener->listen();
         }
     }
@@ -105,23 +104,18 @@ class WriteBuffer implements EventAcceptable
         if ( ! $this->status) {
             $this->buffer = $content;
             $listener = new Listener($this->event, $this->socket, \Event::WRITE);
-            $listener->register('client.write.buffer:send');
+            $listener->register(static::EVENT_BUFFER_SEND);
             $listener->listen();
         } else {
             if (strlen($content) + strlen($this->buffer) <= $this->size) {
                 $this->buffer .= $content;
             } else { // If buffer filled
-                do {
-                    $freeSize = $this->size - strlen($this->buffer);
-                    $this->buffer .= substr($content, 0, $freeSize);
-                    $content = substr($content, $freeSize);
-                    $listener = new Listener($this->event, $this->socket, \Event::WRITE | \Event::PERSIST, $this->out());
-                    $listener->register('client.write.buffer:fill_send');
-                    $listener->listen();
-                    if ('' !== $this->buffer) { // If event client.write.buffer:filled no handle
-                        $this->buffer = '';
-                    }
-                } while (false !== $content);
+                $time = (int)(strlen($content)/$this->size);
+                socket_write($this->socket, $this->buffer);
+                for ($i = 0; $i < $time; ++$i) {
+                    socket_write($this->socket, substr($content, $i*$this->size, $this->size));
+                }
+                $this->buffer = substr($content, $this->size * $time);
             }
         }
     }
@@ -148,17 +142,6 @@ class WriteBuffer implements EventAcceptable
         $this->clear();
         $listener->delete();
         $this->event->free($listener->name(), $listener, true);
-    }
-
-    public function OnFillSend($socket, Listener $listener)
-    {
-        /** @var \Generator $gen */
-        $gen = $listener->argument();
-        socket_write($socket, $gen->current()); echo $gen->current();
-        $gen->next();
-        if ( ! $gen->valid()) {
-            $listener->delete();
-        }
     }
 
 }
