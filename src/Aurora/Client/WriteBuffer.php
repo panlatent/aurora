@@ -132,7 +132,7 @@ class WriteBuffer implements EventAcceptable
     }
 
     public function onSend($socket, $what, Listener $listener)
-    {echo 'a';
+    {
         socket_write($socket, $this->buffer);
         $this->buffer = '';
         $listener->delete();
