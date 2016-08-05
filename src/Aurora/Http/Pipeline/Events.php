@@ -73,7 +73,7 @@ class Events extends EventAcceptor
         if ( ! $request->isPermanenceConnection()) {
             $this->bind->data('client')->declareClose();
         } else {
-            // Empty
+            $this->bind->data('client')->writeBuffer()->flush();
         }
     }
 
