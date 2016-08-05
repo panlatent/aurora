@@ -145,7 +145,7 @@ class WriteBuffer implements EventAcceptable
     public function onSend($socket, $what, Listener $listener)
     {
         socket_write($socket, $this->buffer);
-        $this->buffer = '';
+        $this->clear();
         $listener->delete();
         $this->event->free($listener->name(), $listener, true);
     }

@@ -17,6 +17,10 @@ use Aurora\Timer\TimestampMarker;
 
 class Events extends EventAcceptor
 {
+    const EVENT_SOCKET_READ = 'client.socket:read';
+    const EVENT_SOCKET_WRITE = 'client.socket:write';
+    const EVENT_TIMER = 'client.timer';
+
     /**
      * @var \Aurora\Client
      */
@@ -27,10 +31,13 @@ class Events extends EventAcceptor
      */
     protected $timer;
 
-    public function __construct($bind)
+    public function __construct($dispatcher, $bind)
     {
-        parent::__construct($bind);
+        parent::__construct($dispatcher, $bind);
         $this->timer = new TimerDispatcher();
+        $this->event->bind(static::EVENT_SOCKET_READ, $this);
+        $this->event->bind(static::EVENT_SOCKET_WRITE, $this);
+        $this->event->bind(static::EVENT_TIMER, $this);
     }
 
     public function register()
@@ -54,9 +61,12 @@ class Events extends EventAcceptor
             }
         });
 
-        $this->event->bind('client:timer', $this);
+        $listener = new Listener($this->event, $this->bind->socket(), \Event::READ | \Event::PERSIST, $this->bind);
+        $listener->register(static::EVENT_SOCKET_READ);
+        $listener->listen();
+
         $timer = Listener::timer($this->event, \Event::TIMEOUT | \Event::PERSIST);
-        $timer->register('client:timer');
+        $timer->register(static::EVENT_TIMER);
         $timer->listen(0.25);
     }
 
@@ -68,5 +78,33 @@ class Events extends EventAcceptor
     public function onTimer()
     {
         $this->timer->dispatch();
+    }
+
+    public function onRead($socket, $what, Listener $listener)
+    {
+        /** @var \Aurora\Client $client */
+        $client = $listener->argument();
+        $segment = socket_read($socket, $this->bind->config()->socket_read_buffer_size);
+        if (false === $segment) {
+            $no = socket_last_error($socket);
+            $message = $no != 0 ? socket_strerror($no) : '';
+            $listener->delete();
+            $client->close();
+            throw new Exception($message, $no);
+        } elseif ("" === $segment) {
+            $listener->delete();
+            $client->close();
+        } else {
+            if ( ! $this->bind->timestamp()->isset(ServerTimestampType::SocketFirstRead)) {
+                $this->bind->timestamp()->mark(ServerTimestampType::SocketFirstRead);
+            }
+            $this->bind->timestamp()->mark(ServerTimestampType::SocketLastRead);
+            $client->pipeline()->append($segment);
+        }
+    }
+
+    public function onWrite($socket, $what, Listener $listener)
+    {
+        socket_write($socket, $listener->argument());
     }
 }

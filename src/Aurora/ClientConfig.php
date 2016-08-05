@@ -14,4 +14,6 @@ class ClientConfig extends Config
     public $socket_first_wait_timeout = 10;
 
     public $socket_last_wait_timeout = 10;
+
+    public $socket_read_buffer_size = 512;
 }

@@ -31,6 +31,6 @@ class Client extends \Aurora\Client
 
     protected function createEventAcceptor()
     {
-        return new Events($this);
+        return new Events($this->event, $this);
     }
 }

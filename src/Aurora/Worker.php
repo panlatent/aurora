@@ -19,8 +19,6 @@ use Aurora\Timer\TimestampManager;
 
 class Worker implements EventAcceptable, TimestampManageable
 {
-    const EVENT_SOCKET_READ = 'socket:read';
-
     use EventAccept, TimestampManager;
 
     protected $server;
@@ -30,11 +28,6 @@ class Worker implements EventAcceptable, TimestampManageable
     protected $pid;
 
     protected $socket;
-
-    /**
-     * @var int
-     */
-    protected $socketReadBufferSize = 512;
 
     public function __construct(Server $server, EventDispatcher $event, $socket)
     {
@@ -54,7 +47,6 @@ class Worker implements EventAcceptable, TimestampManageable
             $this->timestamp->mark(ServerTimestampType::WorkerStart);
 
             $this->event->reset();
-            $this->event->bind(static::EVENT_SOCKET_READ, $this);
 
             $pipeline = $this->server->pipeline();
             $pipeline->bind('worker', $this);
@@ -62,10 +54,7 @@ class Worker implements EventAcceptable, TimestampManageable
                 $pipeline->setEvent($event);
             }
 
-            $client = $this->createClient();
-            $listener = new Listener($this->event, $socket, \Event::READ | \Event::PERSIST, $client);
-            $listener->register(static::EVENT_SOCKET_READ);
-            $listener->listen();
+            $this->createClient();
         } catch (\Throwable $ex) {
             echo sprintf('"%s" in "%s:%d"', $ex->getMessage(), $ex->getFile(), $ex->getLine()), "\n";
             echo $ex->getTraceAsString();
@@ -83,34 +72,6 @@ class Worker implements EventAcceptable, TimestampManageable
     public function server()
     {
         return $this->server;
-    }
-
-    public function onRead($socket, $what, Listener $listener)
-    {
-        /** @var \Aurora\Client $client */
-        $client = $listener->argument();
-        $segment = socket_read($socket, $this->socketReadBufferSize);
-        if (false === $segment) {
-            $no = socket_last_error($socket);
-            $message = $no != 0 ? socket_strerror($no) : '';
-            $listener->delete();
-            $client->close();
-            throw new Exception($message, $no);
-        } elseif ("" === $segment) {
-            $listener->delete();
-            $client->close();
-        } else {
-            if ( ! $this->timestamp->isset(ServerTimestampType::SocketFirstRead)) {
-                $this->timestamp->mark(ServerTimestampType::SocketFirstRead);
-            }
-            $this->timestamp->mark(ServerTimestampType::SocketLastRead);
-            $client->pipeline()->append($segment);
-        }
-    }
-
-    public function setSocketReadBufferSize($size)
-    {
-        $this->socketReadBufferSize = $size;
     }
 
     protected function createClient()

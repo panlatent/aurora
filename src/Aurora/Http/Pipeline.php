@@ -28,6 +28,6 @@ class Pipeline extends \Aurora\Pipeline implements EventAcceptable, EventManagea
 
     protected function createEventAcceptor()
     {
-        return new Events($this);
+        return new Events($this->event, $this);
     }
 }

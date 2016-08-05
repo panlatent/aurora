@@ -25,8 +25,9 @@ abstract class EventAcceptor implements EventAcceptable
 
     abstract public function register();
 
-    public function __construct($bind = null)
+    public function __construct(Dispatcher $event, $bind = null)
     {
+        $this->event = $event;
         $this->bind = $bind;
     }
 

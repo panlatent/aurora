@@ -35,6 +35,11 @@ class Client implements EventManageable, ConfigManageable, TimestampManageable
 
     protected $writeBuffer;
 
+    /**
+     * @var int
+     */
+    protected $socketReadBufferSize = 512;
+
     public function __construct(Worker $worker, EventDispatcher $event, $socket, Pipeline $pipeline,
                                 Config $config = null, WriteBuffer $writeBuffer = null)
     {
@@ -111,7 +116,7 @@ class Client implements EventManageable, ConfigManageable, TimestampManageable
 
     protected function createEventAcceptor()
     {
-        return new Events($this);
+        return new Events($this->event, $this);
     }
 
     protected function createWriteBuffer()
