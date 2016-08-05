@@ -142,7 +142,7 @@ class WriteBuffer implements EventAcceptable
         $this->size = $size;
     }
 
-    public function onSend($socket, $what, Listener $listener)
+    public function onSend($socket, Listener $listener)
     {
         socket_write($socket, $this->buffer);
         $this->clear();
@@ -150,7 +150,7 @@ class WriteBuffer implements EventAcceptable
         $this->event->free($listener->name(), $listener, true);
     }
 
-    public function OnFillSend($socket, $what, Listener $listener)
+    public function OnFillSend($socket, Listener $listener)
     {
         /** @var \Generator $gen */
         $gen = $listener->argument();

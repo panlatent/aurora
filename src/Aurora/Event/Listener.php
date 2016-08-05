@@ -94,6 +94,26 @@ class Listener
         return $this->name;
     }
 
+    public function isPersist()
+    {
+        return ($this->what & \Event::PERSIST) === \Event::PERSIST;
+    }
+
+    public function isTimer()
+    {
+        return ($this->what & \Event::TIMEOUT) === \Event::TIMEOUT;
+    }
+
+    public function isRead()
+    {
+        return ($this->what & \Event::READ) === \Event::READ;
+    }
+
+    public function isWrite()
+    {
+        return ($this->what & \Event::WRITE) === \Event::WRITE;
+    }
+
     public function register($name)
     {
         if ( ! $this->base) {

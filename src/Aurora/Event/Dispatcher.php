@@ -104,11 +104,10 @@ class Dispatcher
                     $listener = func_get_arg(1);
                     $this->fire($listener->name(), [$signal, $listener]);
                     break;
-                case 3:
+                case 3: // Ignore 2nd arg, is what in  $listener
                     $fd = func_get_arg(0);
-                    $what = func_get_arg(1);
                     $listener = func_get_arg(2);
-                    $this->fire($listener->name(), [$fd, $what, $listener]);
+                    $this->fire($listener->name(), [$fd, $listener]);
                     break;
                 default:
                     throw new Exception("Aurora\\Event\\Dispatcher::forward(): unable to forward the Libevent event,

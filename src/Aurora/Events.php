@@ -67,7 +67,7 @@ class Events extends EventAcceptor implements SignalAcceptable
         }
     }
 
-    public function onAccept($socket, $what, Listener $listener)
+    public function onAccept($socket)
     {
         if ( ! $client = socket_accept($socket)) {
             throw new Exception("Accept a socket connect failed");

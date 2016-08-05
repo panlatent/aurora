@@ -80,7 +80,7 @@ class Events extends EventAcceptor
         $this->timer->dispatch();
     }
 
-    public function onRead($socket, $what, Listener $listener)
+    public function onRead($socket, Listener $listener)
     {
         /** @var \Aurora\Client $client */
         $client = $listener->argument();
@@ -103,7 +103,7 @@ class Events extends EventAcceptor
         }
     }
 
-    public function onWrite($socket, $what, Listener $listener)
+    public function onWrite($socket, Listener $listener)
     {
         socket_write($socket, $listener->argument());
     }
