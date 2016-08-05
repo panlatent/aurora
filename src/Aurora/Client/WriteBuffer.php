@@ -46,6 +46,11 @@ class WriteBuffer implements EventAcceptable
         return $this->buffer;
     }
 
+    public function empty()
+    {
+        return '' === $this->buffer;
+    }
+
     public function length()
     {
         return strlen($this->buffer);

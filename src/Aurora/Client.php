@@ -79,9 +79,6 @@ class Client implements EventManageable, ConfigManageable, TimestampManageable
     public function close()
     {
         if ($this->socket) {
-            if ($this->writeBuffer->size()) {
-                $this->event->fire(WriteBuffer::EVENT_BUFFER_FILLED);
-            }
             socket_close($this->socket);
         }
         if ( ! $this->event->base()->gotStop()) {
@@ -94,6 +91,9 @@ class Client implements EventManageable, ConfigManageable, TimestampManageable
      */
     public function declareClose()
     {
+        if ( ! $this->writeBuffer->empty()) {
+            $this->writeBuffer->flush();
+        }
         $this->event->declare(function() {
            $this->close();
         });

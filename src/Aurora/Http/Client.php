@@ -9,10 +9,21 @@
 
 namespace Aurora\Http;
 
+use Aurora\Client\WriteBuffer;
+use Aurora\Config;
+use Aurora\Event\Dispatcher;
 use Aurora\Http\Client\Events;
 
 class Client extends \Aurora\Client
 {
+    public function __construct(Worker $worker, Dispatcher $event, $socket, Pipeline $pipeline,
+                                Config $config = null, WriteBuffer $writeBuffer = null)
+    {
+        parent::__construct($worker, $event, $socket, $pipeline, $config, $writeBuffer);
+
+        $this->writeBuffer->open();
+    }
+
     protected function createConfig()
     {
         return new ClientConfig();
