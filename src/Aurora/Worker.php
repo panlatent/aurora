@@ -63,7 +63,9 @@ class Worker implements EventAcceptable, TimestampManageable
             }
 
             $client = $this->createClient();
-            $this->event->listen(static::EVENT_SOCKET_READ, new Listener($socket, \Event::READ | \Event::PERSIST, $client));
+            $listener = new Listener($this->event, $socket, \Event::READ | \Event::PERSIST, $client);
+            $listener->register(static::EVENT_SOCKET_READ);
+            $listener->listen();
         } catch (\Throwable $ex) {
             echo sprintf('"%s" in "%s:%d"', $ex->getMessage(), $ex->getFile(), $ex->getLine()), "\n";
             echo $ex->getTraceAsString();

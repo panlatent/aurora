@@ -11,6 +11,8 @@ namespace Aurora\Event;
 
 class Dispatcher
 {
+    const FORWARD_METHOD_NAME = 'forward';
+
     /**
      * @var \EventBase
      */
@@ -146,17 +148,6 @@ class Dispatcher
         $event->add(0);
 
         $this->declares[] = $event;
-    }
-
-    public function listen($name, Listener $listener, $auto = true)
-    {
-        $this->listeners->add($name, $listener);
-        $listener->setEventBase($this->base);
-        $listener->setName($name);
-        $listener->setCallback([$this, 'forward']);
-        if ($auto) {
-            $listener->listen();
-        }
     }
 
     public function dispatch()

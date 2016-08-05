@@ -11,6 +11,8 @@ namespace Aurora\Event;
 
 class Listener
 {
+    protected $dispatcher;
+
     /**
      * @var \EventBase
      */
@@ -46,26 +48,39 @@ class Listener
      */
     protected $what;
 
-    public function __construct($fd, $what, $arg = null)
+    public function __construct(Dispatcher $dispatcher, $fd, $what, $arg = null)
     {
+        $this->dispatcher = $dispatcher;
+        $this->base = $dispatcher->base();
         $this->fd = $fd;
         $this->what = $what;
         $this->argument = $arg;
+        $this->callback = [$this->dispatcher, Dispatcher::FORWARD_METHOD_NAME];
     }
 
-    public static function signal($signal, $arg = null)
+    public static function signal(Dispatcher $dispatcher, $signal, $arg = null)
     {
-        return new static($signal, \Event::SIGNAL, $arg);
+        return new static($dispatcher, $signal, \Event::SIGNAL, $arg);
     }
 
-    public static function timer($what, $arg = null)
+    public static function timer(Dispatcher $dispatcher, $what, $arg = null)
     {
-        return new static(-1, $what, $arg);
+        return new static($dispatcher, -1, $what, $arg);
     }
 
     public function argument()
     {
         return $this->argument;
+    }
+
+    public function base()
+    {
+        return $this->base;
+    }
+
+    public function dispatcher()
+    {
+        return $this->dispatcher;
     }
 
     public function event()
@@ -78,18 +93,31 @@ class Listener
         return $this->name;
     }
 
-    public function listen($timeout = -1)
+    public function register($name)
     {
         if ( ! $this->base) {
-            throw new Exception("Aurora\\Event\\Listener::listen(): need to set an event base");
+            throw new Exception("need to set an event base");
         } elseif ( !is_callable($this->callback)) {
-            throw new Exception("Aurora\\Event\\Listener::listen(): need to set a callback");
+            throw new Exception("need to set a callback");
         }
 
+        $this->name = $name;
+        $this->dispatcher->listeners()->add($name, $this);
         $this->event = new \Event($this->base, $this->fd, $this->what, $this->callback, $this);
-        if ( ! $this->event->add($timeout)) {
-            throw new Exception("event listener to listen a event failed");
+
+        return $this;
+    }
+
+    public function listen($timeout = -1)
+    {
+        if ( ! $this->event) {
+            throw new Exception("need register a event");
         }
+        if ( ! $this->event->add($timeout)) {
+            throw new Exception("event listen failed");
+        }
+
+        return $this;
     }
 
     public function delete()
@@ -104,14 +132,14 @@ class Listener
         }
     }
 
+    public function free()
+    {
+        $this->dispatcher->listeners()->unsetSub($this->name, $this);
+    }
+
     public function setEventBase(\EventBase $base)
     {
         $this->base = $base;
-    }
-
-    public function setName($name)
-    {
-        $this->name = $name;
     }
 
     public function setArgument($arg)

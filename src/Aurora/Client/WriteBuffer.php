@@ -94,7 +94,9 @@ class WriteBuffer implements EventAcceptable
     public function flush()
     {
         if (null !== $this->buffer) {
-            $this->event->listen('client.write.buffer:send', new Listener($this->socket, \Event::WRITE));
+            $listener = new Listener($this->event, $this->socket, \Event::WRITE);
+            $listener->register('client.write.buffer:send');
+            $listener->listen();
         }
     }
 
@@ -102,7 +104,9 @@ class WriteBuffer implements EventAcceptable
     {
         if ( ! $this->status) {
             $this->buffer = $content;
-            $this->event->listen('client.write.buffer:send', new Listener($this->socket, \Event::WRITE));
+            $listener = new Listener($this->event, $this->socket, \Event::WRITE);
+            $listener->register('client.write.buffer:send');
+            $listener->listen();
         } else {
             if (strlen($content) + strlen($this->buffer) <= $this->size) {
                 $this->buffer .= $content;
@@ -111,7 +115,9 @@ class WriteBuffer implements EventAcceptable
                     $freeSize = $this->size - strlen($this->buffer);
                     $this->buffer .= substr($content, 0, $freeSize);
                     $content = substr($content, $freeSize);
-                    $this->event->listen('client.write.buffer:fill_send', new Listener($this->socket, \Event::WRITE | \Event::PERSIST, $this->out()));
+                    $listener = new Listener($this->event, $this->socket, \Event::WRITE | \Event::PERSIST, $this->out());
+                    $listener->register('client.write.buffer:fill_send');
+                    $listener->listen();
                     if ('' !== $this->buffer) { // If event client.write.buffer:filled no handle
                         $this->buffer = '';
                     }

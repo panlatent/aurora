@@ -55,7 +55,8 @@ class Events extends EventAcceptor
         });
 
         $this->event->bind('client:timer', $this);
-        $this->event->listen('client:timer', $timer = Listener::timer(\Event::TIMEOUT | \Event::PERSIST), false);
+        $timer = Listener::timer($this->event, \Event::TIMEOUT | \Event::PERSIST);
+        $timer->register('client:timer');
         $timer->listen(0.25);
     }
 

@@ -116,8 +116,9 @@ class Server implements EventAcceptable, SignalAcceptable, TimestampManageable
         if ( ! $this->pipeline) {
             $this->pipeline = new Pipeline();
         }
-        $this->event->listen(static::EVENT_SOCKET_ACCEPT,
-            new Listener($this->socket, \Event::READ | \Event::PERSIST));
+        $listener = new Listener($this->event, $this->socket, \Event::READ | \Event::PERSIST);
+        $listener->register(static::EVENT_SOCKET_ACCEPT);
+        $listener->listen();
 
         $state = $this->event->base()->dispatch();
         if (static::WORKER === $this->type) {
@@ -191,7 +192,9 @@ class Server implements EventAcceptable, SignalAcceptable, TimestampManageable
     protected function addSignalEvents(array $signals)
     {
         foreach ($signals as $signal) {
-            $this->event->listen('signal:accept', new Listener($signal, \Event::SIGNAL));
+            $listener = Listener::signal($this->event, $signal);
+            $listener->register(static::EVENT_SIGNAL_ACCEPT);
+            $listener->listen();
         }
     }
 
