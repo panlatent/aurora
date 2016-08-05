@@ -9,6 +9,7 @@
 
 namespace Aurora;
 
+use Aurora\Client\WriteBuffer;
 use Aurora\Config\ConfigManageable;
 use Aurora\Client\Events;
 use Aurora\Config\ConfigManager;
@@ -32,7 +33,10 @@ class Client implements EventManageable, ConfigManageable, TimestampManageable
 
     protected $pipeline;
 
-    public function __construct(Worker $worker, EventDispatcher $event, $socket, Pipeline $pipeline, Config $config = null)
+    protected $writeBuffer;
+
+    public function __construct(Worker $worker, EventDispatcher $event, $socket, Pipeline $pipeline,
+                                Config $config = null, WriteBuffer $writeBuffer = null)
     {
         $this->worker = $worker;
         $this->event = $event;
@@ -48,6 +52,8 @@ class Client implements EventManageable, ConfigManageable, TimestampManageable
 
         $this->pipeline->bind('client', $this);
         $this->pipeline->open();
+
+        $this->writeBuffer = $writeBuffer ?? $this->createWriteBuffer();
     }
 
     public function worker()
@@ -65,9 +71,19 @@ class Client implements EventManageable, ConfigManageable, TimestampManageable
         return $this->pipeline;
     }
 
+    public function writeBuffer()
+    {
+        return $this->writeBuffer;
+    }
+
     public function close()
     {
-        socket_close($this->socket);
+        if ($this->socket) {
+            if ($this->writeBuffer->size()) {
+                $this->event->fire(WriteBuffer::EVENT_BUFFER_FILLED);
+            }
+            socket_close($this->socket);
+        }
         if ( ! $this->event->base()->gotStop()) {
             $this->event->base()->stop();
         }
@@ -75,7 +91,7 @@ class Client implements EventManageable, ConfigManageable, TimestampManageable
 
     public function send($content)
     {
-        socket_write($this->socket, $content);
+        $this->writeBuffer->write($content);
     }
 
     protected function createConfig()
@@ -86,6 +102,11 @@ class Client implements EventManageable, ConfigManageable, TimestampManageable
     protected function createEventAcceptor()
     {
         return new Events($this);
+    }
+
+    protected function createWriteBuffer()
+    {
+        return new WriteBuffer($this->event, $this->socket);
     }
 
 }

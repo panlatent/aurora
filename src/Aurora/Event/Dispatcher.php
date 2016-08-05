@@ -43,6 +43,29 @@ class Dispatcher
         return $this->base;
     }
 
+    public function binds()
+    {
+        return $this->binds;
+    }
+
+    public function listeners()
+    {
+        return $this->listeners;
+    }
+
+    public function bind($name, $callback)
+    {
+        if ( ! is_callable($callback) && ( ! is_object($callback) || ! $callback instanceof EventAcceptable)) {
+            throw new Exception('Aurora\\Event\\Dispatcher::bind(): expects parameter 1 to be a valid callback
+                                or implements Aurora\\Event\\EventAcceptable, give a ' . gettype($callback));
+        }
+
+        if ( ! is_object($callback)) {
+            $callback = (object)['callback' => $callback];
+        }
+        $this->binds->add($name, $callback);
+    }
+
     public function fire($name, $arg = [])
     {
         if ($this->binds->isset($name)) {
@@ -59,19 +82,6 @@ class Dispatcher
                 call_user_func_array($callback, $arg);
             }
         }
-    }
-
-    public function bind($name, $callback)
-    {
-        if ( ! is_callable($callback) && ( ! is_object($callback) || ! $callback instanceof EventAcceptable)) {
-            throw new Exception('Aurora\\Event\\Dispatcher::bind(): expects parameter 1 to be a valid callback
-                                or implements Aurora\\Event\\EventAcceptable, give a ' . gettype($callback));
-        }
-
-        if ( ! is_object($callback)) {
-            $callback = (object)['callback' => $callback];
-        }
-        $this->binds->add($name, $callback);
     }
 
     public function forward()
@@ -106,17 +116,6 @@ class Dispatcher
         }
     }
 
-    public function listen($name, Listener $listener, $auto = true)
-    {
-        $this->listeners->add($name, $listener);
-        $listener->setEventBase($this->base);
-        $listener->setName($name);
-        $listener->setCallback([$this, 'forward']);
-        if ($auto) {
-            $listener->listen();
-        }
-    }
-
     public function free($name, Listener $listener = null, $onlyClear = false)
     {
         if (null === $listener) {
@@ -131,8 +130,29 @@ class Dispatcher
             if ( ! $onlyClear) {
                 $listener->delete();
             }
-            $this->listeners->remove($name, $listener);
+            $this->listeners->unsetSub($name, $listener);
         }
+    }
+
+    public function listen($name, Listener $listener, $auto = true)
+    {
+        $this->listeners->add($name, $listener);
+        $listener->setEventBase($this->base);
+        $listener->setName($name);
+        $listener->setCallback([$this, 'forward']);
+        if ($auto) {
+            $listener->listen();
+        }
+    }
+
+    public function dispatch()
+    {
+        $this->base->dispatch();
+    }
+
+    public function stop()
+    {
+        $this->base->stop();
     }
 
     public function reset()
