@@ -50,7 +50,7 @@ class Events extends EventAcceptor implements SignalAcceptable
     {
         switch ($signal) {
             case SIGTERM:
-
+                $this->bind->workManage()->killAll();
                 $this->event->base()->exit();
                 break;
             case SIGUSR1: // @todo Workers Shard Memory Message
