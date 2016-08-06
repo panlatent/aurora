@@ -11,9 +11,9 @@ namespace Aurora\Event;
 
 interface EventManageable
 {
-    public function event();
+    public function getEvent();
 
-    public function eventAcceptor();
+    public function getEventAcceptor();
 
     public function setEvent(Dispatcher $dispatcher);
 

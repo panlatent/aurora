@@ -9,14 +9,9 @@
 
 namespace Aurora\Pipeline;
 
-class Buffer implements \Countable
+class Buffer
 {
     protected $storage = '';
-
-    public function count()
-    {
-        return $this->size();
-    }
 
     public function size()
     {
@@ -56,10 +51,5 @@ class Buffer implements \Countable
         $this->storage = substr($this->storage, $length + $abandonSize);
 
         return $content;
-    }
-
-    public function __invoke()
-    {
-        return $this->storage;
     }
 }

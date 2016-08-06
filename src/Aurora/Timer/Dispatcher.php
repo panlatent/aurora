@@ -21,7 +21,7 @@ class Dispatcher
         $this->timers = new \SplPriorityQueue();
     }
 
-    public function timers()
+    public function getTimers()
     {
         return $this->timers;
     }

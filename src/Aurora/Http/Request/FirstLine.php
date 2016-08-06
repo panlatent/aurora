@@ -60,7 +60,7 @@ class FirstLine implements Producible
         }
         $this->version = $version;
 
-        if ( ! in_array($method, static::$methodSupports[$this->version(true)])) {
+        if ( ! in_array($method, static::$methodSupports[$this->getVersion(true)])) {
             throw new Exception("This is not supported HTTP method");
         }
         $this->method = $method;
@@ -78,27 +78,27 @@ class FirstLine implements Producible
         return new static($fields[0], $fields[1], $fields[2]);
     }
 
-    public function query()
+    public function getQuery()
     {
         return $this->query;
     }
 
-    public function method()
+    public function getMethod()
     {
         $this->method;
     }
 
-    public function url()
+    public function getUrl()
     {
         return $this->url;
     }
 
-    public function uri()
+    public function getUri()
     {
         return $this->uri;
     }
 
-    public function version($onlyNumber = false)
+    public function getVersion($onlyNumber = false)
     {
         if ($onlyNumber) {
             return substr($this->version, 5);

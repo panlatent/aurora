@@ -13,7 +13,7 @@ trait ConfigManager
 {
     protected $config;
 
-    public function config()
+    public function getConfig()
     {
         return $this->config;
     }

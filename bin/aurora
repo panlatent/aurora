@@ -18,7 +18,7 @@ use Aurora\Console\Command\ServerStop;
 require __DIR__ . '/../vendor/autoload.php';
 
 defined('AURORA_DAEMON') or define('AURORA_DAEMON', true);
-defined('AURORA_OS') or define('AURORA_OS', Aurora::os());
+defined('AURORA_OS') or define('AURORA_OS', Aurora::getOperatingSystemType());
 defined('AURORA_ROOT') or define('AURORA_ROOT', realpath(__DIR__ . '/../') . DIRECTORY_SEPARATOR);
 defined('AURORA_PWD') or define('AURORA_PWD', getcwd() . DIRECTORY_SEPARATOR);
 defined('AURORA_INI') or define('AURORA_INI', Aurora::INI);
@@ -48,7 +48,7 @@ $application->addCommands([
     new ServerStatus(),
     new ServerRestart(),
 ]);
-$application->master(function ($config) {
+$application->setMaster(function ($config) {
     $server = require __DIR__ . '/../httpd/server.php';
     $server->start();
 });

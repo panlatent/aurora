@@ -15,7 +15,6 @@ use Aurora\Event\Dispatcher as EventDispatcher;
 use Aurora\Event\EventAccept;
 use Aurora\Event\EventAcceptable;
 use Aurora\Event\EventManageable;
-use Aurora\Event\Listener;
 use Aurora\Support\Posix;
 use Aurora\Timer\TimestampManageable;
 use Aurora\Timer\TimestampManager;
@@ -46,15 +45,15 @@ class Worker implements EventAcceptable, ConfigManageable, TimestampManageable
             $this->server = $server;
             $this->event = $event;
             $this->socket = $socket;
-            $this->timestamp = $server->timestamp();
+            $this->timestamp = $server->getTimestamp();
             $this->timestamp->mark(ServerTimestampType::WorkerStart);
             $this->config = $config ?? new WorkerConfig();
 
             Posix::setUser($this->config->worker_user, $this->config->worker_user_group);
 
-            $pipeline = $this->server->pipeline();
+            $pipeline = $this->server->getPipeline();
             $pipeline->bind('worker', $this);
-            if ($pipeline instanceof EventManageable && ! $pipeline->event()) {
+            if ($pipeline instanceof EventManageable && ! $pipeline->getEvent()) {
                 $pipeline->setEvent($event);
             }
 
@@ -62,25 +61,25 @@ class Worker implements EventAcceptable, ConfigManageable, TimestampManageable
         } catch (\Throwable $ex) {
             echo sprintf('"%s" in "%s:%d"', $ex->getMessage(), $ex->getFile(), $ex->getLine()), "\n";
             echo $ex->getTraceAsString();
-            if ( ! $this->event->base()->gotStop()) {
-                $this->event->base()->stop();
+            if ( ! $this->event->getBase()->gotStop()) {
+                $this->event->stop();
             }
         }
     }
 
-    public function pid()
+    public function getPid()
     {
         return $this->pid;
     }
 
-    public function server()
+    public function getServer()
     {
         return $this->server;
     }
 
     protected function createClient()
     {
-        $client = new Client($this, $this->event, $this->socket, $this->server->pipeline());
+        $client = new Client($this, $this->event, $this->socket, $this->server->getPipeline());
 
         return $client;
     }

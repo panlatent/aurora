@@ -37,7 +37,7 @@ class Events extends EventAcceptor implements SignalAcceptable
 
     public function register()
     {
-        $listener = new Listener($this->event, $this->bind->socket(), \Event::READ | \Event::PERSIST);
+        $listener = new Listener($this->event, $this->bind->getSocket(), \Event::READ | \Event::PERSIST);
         $listener->register(static::EVENT_SOCKET_ACCEPT);
         $listener->listen();
 
@@ -50,8 +50,8 @@ class Events extends EventAcceptor implements SignalAcceptable
     {
         switch ($signal) {
             case SIGTERM:
-                $this->bind->workManage()->killAll();
-                $this->event->base()->exit();
+                $this->bind->getWorkManage()->killAll();
+                $this->event->exit();
                 break;
             case SIGUSR1: // @todo Workers Shard Memory Message
                 break;
@@ -59,7 +59,7 @@ class Events extends EventAcceptor implements SignalAcceptable
                 break;
             case SIGCHLD:
                 while (($pid = pcntl_waitpid(-1, $status, WUNTRACED | WNOHANG)) > 0) {
-                    $this->bind->workManage()->remove($pid);
+                    $this->bind->getWorkManage()->remove($pid);
                 }
                 break;
             default:
@@ -75,8 +75,8 @@ class Events extends EventAcceptor implements SignalAcceptable
         socket_set_nonblock($client);
 
         $worker = $this->bind->createWorker($client);
-        if (Server::MASTER === $this->bind->type()) {
-            $this->bind->workManage()->add($worker);
+        if (Server::MASTER === $this->bind->getType()) {
+            $this->bind->getWorkManage()->add($worker);
             socket_close($client);
         }
     }

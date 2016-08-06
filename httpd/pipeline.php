@@ -14,7 +14,7 @@ use Aurora\Http\Server;
 
 $pipeline = Server::createMatchPipeline();
 $pipeline->pipe(function(Request $request) {
-    $uri = $request->uri() != '/' ? $request->uri() : '/index.html';
+    $uri = $request->getUri() != '/' ? $request->getUri() : '/index.html';
     ob_start();
     include __DIR__ . '/../htdocs' . $uri;
     return ob_get_clean();
@@ -25,7 +25,7 @@ $pipeline->pipe(function() {
     return $response;
 });
 $pipeline->pipe(function(Response $response, Pipeline $pipe) {
-    $pipe->data('client')->send($response->getContent());
+    $pipe->getData('client')->send($response->getContent());
 });
 
 return $pipeline;

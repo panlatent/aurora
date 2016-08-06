@@ -34,7 +34,7 @@ abstract class EventAcceptor implements EventAcceptable
     /**
      * @return object|null
      */
-    public function bind()
+    public function getBind()
     {
         return $this->bind;
     }
@@ -42,7 +42,7 @@ abstract class EventAcceptor implements EventAcceptable
     /**
      * @return \Aurora\Event\Dispatcher
      */
-    public function event()
+    public function getEvent()
     {
         return $this->event;
     }

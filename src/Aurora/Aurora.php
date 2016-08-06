@@ -16,7 +16,7 @@ class Aurora
     const VERSION = '0.1.0';
     const EXTENSIONS = ['posix', 'pcntl', 'event'];
 
-    public static function os()
+    public static function getOperatingSystemType()
     {
         switch (PHP_OS) {
             case 'WINNT':

@@ -46,7 +46,7 @@ class Events extends EventAcceptor
 
     public function register()
     {
-        $listener = new Listener($this->event, $this->bind->socket(), \Event::READ | \Event::PERSIST, $this->bind);
+        $listener = new Listener($this->event, $this->bind->getSocket(), \Event::READ | \Event::PERSIST, $this->bind);
         $listener->register(static::EVENT_SOCKET_READ);
         $listener->listen();
 
@@ -55,7 +55,7 @@ class Events extends EventAcceptor
         $timer->listen(0.25);
     }
 
-    public function timer()
+    public function getTimer()
     {
         return $this->timer;
     }
@@ -68,8 +68,8 @@ class Events extends EventAcceptor
     public function onRead($socket, Listener $listener)
     {
         /** @var \Aurora\Client $client */
-        $client = $listener->argument();
-        $segment = socket_read($socket, $this->bind->config()->socket_read_buffer_size);
+        $client = $listener->getArgument();
+        $segment = socket_read($socket, $this->bind->getConfig()->socket_read_buffer_size);
         if (false === $segment) {
             $no = socket_last_error($socket);
             $message = $no != 0 ? socket_strerror($no) : '';
@@ -80,25 +80,25 @@ class Events extends EventAcceptor
             $listener->delete();
             $client->close();
         } else {
-            if ( ! $this->bind->timestamp()->isset(ServerTimestampType::SocketFirstRead)) {
-                $this->bind->timestamp()->mark(ServerTimestampType::SocketFirstRead);
+            if ( ! $this->bind->getTimestamp()->has(ServerTimestampType::SocketFirstRead)) {
+                $this->bind->getTimestamp()->mark(ServerTimestampType::SocketFirstRead);
             }
-            $this->bind->timestamp()->mark(ServerTimestampType::SocketLastRead);
-            $client->pipeline()->append($segment);
+            $this->bind->getTimestamp()->mark(ServerTimestampType::SocketLastRead);
+            $client->getPipeline()->append($segment);
         }
     }
 
     public function onWrite($socket, Listener $listener)
     {
-        socket_write($socket, $listener->argument());
+        socket_write($socket, $listener->getArgument());
     }
 
     public function onSocketInitWaitTimeoutTimer()
     {
-        $timestamp = $this->bind->timestamp();
+        $timestamp = $this->bind->getTimestamp();
         if ( ! ($socketFirstReadUT = $timestamp->get(ServerTimestampType::SocketFirstRead))) { // HTTP Connection first request timeout
             $interval = TimestampMarker::interval($timestamp->get(ServerTimestampType::ClientStart));
-            if ($interval >= $this->bind->config()->socket_first_wait_timeout) {
+            if ($interval >= $this->bind->getConfig()->socket_first_wait_timeout) {
                 $this->bind->declareClose();
             }
         }
@@ -106,10 +106,10 @@ class Events extends EventAcceptor
 
     public function onSocketReadWaitTimeoutTimer()
     {
-        $timestamp = $this->bind->timestamp();
+        $timestamp = $this->bind->getTimestamp();
         if (($socketLastReadUT = $timestamp->get(ServerTimestampType::SocketLastRead))) {
             $interval = TimestampMarker::interval($socketLastReadUT);
-            if ($interval >= $this->bind->config()->socket_last_wait_timeout) {
+            if ($interval >= $this->bind->getConfig()->socket_last_wait_timeout) {
                 $this->bind->declareClose();
             }
         }

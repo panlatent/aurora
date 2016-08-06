@@ -55,19 +55,9 @@ class FileConfig implements \ArrayAccess
     /**
      * @return \Aurora\Config\FileConfig
      */
-    public static function default()
+    public static function getDefault()
     {
         return static::$default;
-    }
-
-    public function inject(Config $config, $map = null, $onlyMap = false)
-    {
-        // @todo
-    }
-
-    public function merge(FileConfig $config)
-    {
-        $this->values = array_merge_recursive($this->values, $config->get());
     }
 
     public function get($name = '', $default = false)
@@ -89,7 +79,7 @@ class FileConfig implements \ArrayAccess
         return $values;
     }
 
-    public function isset($name)
+    public function has($name)
     {
         $dotNames = $this->parseDotName($name);
         $values = &$this->values;
@@ -119,23 +109,29 @@ class FileConfig implements \ArrayAccess
         $values[$lastSubName] = $value;
     }
 
-    public function unset($name = '')
+    public function remove($name)
     {
-        if ('' == $name) {
-            $this->values = [];
-        } else {
-            $dotNames = $this->parseDotName($name);
-            $values = &$this->values;
-            foreach ($dotNames as $subName) {
-                if (isset($values[$subName])) {
-                    $values = &$values[$subName];
-                } else {
-                    throw new Exception("This configuration item name does not exist: $name");
-                }
+        $dotNames = $this->parseDotName($name);
+        $values = &$this->values;
+        foreach ($dotNames as $subName) {
+            if (isset($values[$subName])) {
+                $values = &$values[$subName];
+            } else {
+                throw new Exception("This configuration item name does not exist: $name");
             }
-
-            unset($values);
         }
+
+        unset($values);
+    }
+
+    public function clear()
+    {
+        $this->values = [];
+    }
+
+    public function merge(FileConfig $config)
+    {
+        $this->values = array_merge_recursive($this->values, $config->get());
     }
 
     public function offsetExists($offset)

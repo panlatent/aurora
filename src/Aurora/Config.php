@@ -34,11 +34,6 @@ abstract class Config implements Configurable
         $this->$name = $value;
     }
 
-    final public function __invoke($name)
-    {
-        return $this->$name;
-    }
-
     protected function register()
     {
     }

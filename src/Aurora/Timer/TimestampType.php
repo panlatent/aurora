@@ -29,12 +29,12 @@ abstract class TimestampType
         return $class->getConstants();
     }
 
-    public function name()
+    public function getName()
     {
         return array_search($this->value, static::constants());
     }
 
-    public function value()
+    public function getValue()
     {
         return $this->value;
     }

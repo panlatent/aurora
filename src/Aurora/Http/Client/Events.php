@@ -32,12 +32,12 @@ class Events extends \Aurora\Client\Events
 
     public function onKeepAliveTimeoutTimer()
     {
-        if ( ! $this->bind->keepAlive())
+        if ( ! $this->bind->getKeepAlive())
             return;
-        $timestamp = $this->bind->timestamp();
+        $timestamp = $this->bind->getTimestamp();
         if ($requestLastUT = $timestamp->get(ServerTimestampType::RequestLast)) { // HTTP Connection keep-alive timeout
             $interval = TimestampMarker::interval($requestLastUT);
-            $timeout = $this->bind->config()->keep_alive_timeout;
+            $timeout = $this->bind->getConfig()->keep_alive_timeout;
             if ($interval >= $timeout || TimestampMarker::intervalEqual($timeout, $interval, 0.25)) {
                 $this->bind->declareClose();
             }
@@ -46,12 +46,12 @@ class Events extends \Aurora\Client\Events
 
     public function onSocketReadWaitTimeoutTimer()
     {
-        if (null === $this->bind->keepAlive() || true === $this->bind->keepAlive()) return; // Ignore this timer at keep-alive
+        if (null === $this->bind->getKeepAlive() || true === $this->bind->getKeepAlive()) return; // Ignore this timer at keep-alive
 
-        $timestamp = $this->bind->timestamp();
+        $timestamp = $this->bind->getTimestamp();
         if (($socketLastReadUT = $timestamp->get(ServerTimestampType::SocketLastRead))) {
             $interval = TimestampMarker::interval($socketLastReadUT);
-            if ($interval >= $this->bind->config()->socket_last_wait_timeout) {
+            if ($interval >= $this->bind->getConfig()->socket_last_wait_timeout) {
                 $this->bind->declareClose();
             }
         }

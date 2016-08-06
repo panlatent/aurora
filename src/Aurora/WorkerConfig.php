@@ -19,7 +19,7 @@ class WorkerConfig extends Config
 
     protected function register()
     {
-        if ($fileConfig = FileConfig::default()) {
+        if ($fileConfig = FileConfig::getDefault()) {
             preg_match('/^(.*?)\s*(|:\s*(.*?))$/', $fileConfig->get('www.user', 'www-data:www-data'), $userMatch);
             $this->worker_user = $userMatch[1];
             $this->worker_user_group = $userMatch[3] ?? '';

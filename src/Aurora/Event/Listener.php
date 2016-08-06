@@ -56,7 +56,7 @@ class Listener
     public function __construct(Dispatcher $dispatcher, $fd, $what, $arg = null)
     {
         $this->dispatcher = $dispatcher;
-        $this->base = $dispatcher->base();
+        $this->base = $dispatcher->getBase();
         $this->fd = $fd;
         $this->what = $what;
         $this->argument = $arg;
@@ -75,27 +75,27 @@ class Listener
         return new static($dispatcher, -1, $what, $arg);
     }
 
-    public function argument()
+    public function getArgument()
     {
         return $this->argument;
     }
 
-    public function base()
+    public function getBase()
     {
         return $this->base;
     }
 
-    public function dispatcher()
+    public function getDispatcher()
     {
         return $this->dispatcher;
     }
 
-    public function event()
+    public function getEvent()
     {
         return $this->event;
     }
 
-    public function name()
+    public function getName()
     {
         return $this->name;
     }
@@ -129,7 +129,7 @@ class Listener
         }
 
         $this->name = $name;
-        $this->dispatcher->listeners()->add($name, $this);
+        $this->dispatcher->getListeners()->add($name, $this);
         $this->event = new \Event($this->base, $this->fd, $this->what, $this->callback, $this);
         $this->event->setPriority($this->priority);
 
@@ -162,7 +162,7 @@ class Listener
 
     public function free()
     {
-        $this->dispatcher->listeners()->unsetSub($this->name, $this);
+        $this->dispatcher->getListeners()->removeSub($this->name, $this);
     }
 
     public function setEventBase(\EventBase $base)
@@ -185,7 +185,7 @@ class Listener
         $this->callback = $callback;
     }
 
-    public function setriority($priority)
+    public function setPriority($priority)
     {
         $this->priority = $priority;
     }

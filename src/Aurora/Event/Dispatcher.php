@@ -45,17 +45,17 @@ class Dispatcher
         $this->base->free();
     }
 
-    public function base()
+    public function getBase()
     {
         return $this->base;
     }
 
-    public function binds()
+    public function getBinds()
     {
         return $this->binds;
     }
 
-    public function listeners()
+    public function getListeners()
     {
         return $this->listeners;
     }
@@ -75,7 +75,7 @@ class Dispatcher
 
     public function fire($name, $arg = [])
     {
-        if ($this->binds->isset($name)) {
+        if ($this->binds->has($name)) {
             foreach ($this->binds->get($name) as $callback) {
                 if (is_object($callback)) {
                     if ($callback instanceof EventAcceptable) {
@@ -97,17 +97,17 @@ class Dispatcher
             switch ($num = func_num_args()) {
                 case 1:
                     $listener = func_get_arg(0);
-                    $this->fire($listener->name(), [$listener]);
+                    $this->fire($listener->getName(), [$listener]);
                     break;
                 case 2:
                     $signal = func_get_arg(0);
                     $listener = func_get_arg(1);
-                    $this->fire($listener->name(), [$signal, $listener]);
+                    $this->fire($listener->getName(), [$signal, $listener]);
                     break;
                 case 3: // Ignore 2nd arg, is what in  $listener
                     $fd = func_get_arg(0);
                     $listener = func_get_arg(2);
-                    $this->fire($listener->name(), [$fd, $listener]);
+                    $this->fire($listener->getName(), [$fd, $listener]);
                     break;
                 default:
                     throw new Exception("Aurora\\Event\\Dispatcher::forward(): unable to forward the Libevent event,
@@ -116,8 +116,8 @@ class Dispatcher
         } catch (\Throwable $ex) {
             echo sprintf('"%s" in "%s:%d"', $ex->getMessage(), $ex->getFile(), $ex->getLine()), "\n";
             echo $ex->getTraceAsString();
-            if ( ! $this->base()->gotStop()) {
-                $this->base()->stop();
+            if ( ! $this->getBase()->gotStop()) {
+                $this->getBase()->stop();
             }
         }
     }
@@ -131,12 +131,12 @@ class Dispatcher
                     $listener->delete();
                 }
             }
-            $this->listeners->unset($name);
+            $this->listeners->remove($name);
         } else {
             if ( ! $onlyClear) {
                 $listener->delete();
             }
-            $this->listeners->unsetSub($name, $listener);
+            $this->listeners->removeSub($name, $listener);
         }
     }
 
@@ -152,6 +152,11 @@ class Dispatcher
     public function dispatch()
     {
         $this->base->dispatch();
+    }
+
+    public function exit()
+    {
+        $this->base->exit();
     }
 
     public function stop()

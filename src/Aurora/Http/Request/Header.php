@@ -29,12 +29,12 @@ class Header extends ParameterStorage implements Producible
         return new static($headers);
     }
 
-    public function header($name, $default = false)
+    public function getHeader($name, $default = false)
     {
         return $this->get($name, $default);
     }
 
-    public function headerValue($name, $default = false)
+    public function getHeaderValue($name, $default = false)
     {
         if ( ! ($header = $this->get($name, $default))) {
             return $header;
@@ -47,7 +47,7 @@ class Header extends ParameterStorage implements Producible
         }
     }
 
-    public function headerParameters($name, $default = false)
+    public function getHeaderParameters($name, $default = false)
     {
         if ( ! ($header = $this->get($name, $default))) {
             return $header;
@@ -60,7 +60,7 @@ class Header extends ParameterStorage implements Producible
         }
     }
 
-    public function headers()
+    public function getHeaders()
     {
         return $this->all();
     }

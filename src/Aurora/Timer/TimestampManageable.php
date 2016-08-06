@@ -14,7 +14,7 @@ interface TimestampManageable
     /**
      * @return \Aurora\Timer\TimestampMarker
      */
-    public function timestamp();
+    public function getTimestamp();
 
     /**
      * @param \Aurora\Timer\TimestampMarker $timestamp

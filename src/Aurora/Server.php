@@ -75,27 +75,22 @@ class Server implements EventManageable, TimestampManageable
         return new Pipeline();
     }
 
-    public function createWorker($client)
-    {
-        return new Worker($this, $this->event, $client);
-    }
-
-    public function pipeline()
+    public function getPipeline()
     {
         return $this->pipeline;
     }
 
-    public function socket()
+    public function getSocket()
     {
         return $this->socket;
     }
 
-    public function type()
+    public function getType()
     {
         return $this->type;
     }
 
-    public function workManage()
+    public function getWorkManage()
     {
         return $this->workerManager;
     }
@@ -127,7 +122,7 @@ class Server implements EventManageable, TimestampManageable
 
         $this->eventAcceptor->register();
 
-        $state = $this->event->base()->dispatch();
+        $state = $this->event->dispatch();
         if (static::WORKER === $this->type) {
             exit(0);
         }
@@ -143,7 +138,12 @@ class Server implements EventManageable, TimestampManageable
         $this->started = false;
         $this->timestamp->mark(ServerTimestampType::ServerStop);
 
-        return $this->event->base()->stop();
+        return $this->event->stop();
+    }
+
+    public function createWorker($client)
+    {
+        return new Worker($this, $this->event, $client);
     }
 
     public function setPipeline(Pipeline $pipeline)

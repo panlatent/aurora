@@ -18,6 +18,11 @@ class ParameterStorage implements \ArrayAccess, \Countable, \Iterator
         $this->storage = $storage;
     }
 
+    public function count()
+    {
+        return count($this->storage);
+    }
+
     public function all()
     {
         return $this->storage;
@@ -28,24 +33,19 @@ class ParameterStorage implements \ArrayAccess, \Countable, \Iterator
         return $this->storage[$name] ?? $default;
     }
 
+    public function has($name)
+    {
+        return isset($this->storage[$name]);
+    }
+
     public function set($name, $value)
     {
         $this->storage[$name] = $value;
     }
 
-    public function isset($name)
-    {
-        return isset($this->storage[$name]);
-    }
-
-    public function unset($name)
+    public function remove($name)
     {
         unset($this->storage[$name]);
-    }
-
-    public function count()
-    {
-        return count($this->storage);
     }
 
     public function offsetGet($offset)
@@ -55,7 +55,7 @@ class ParameterStorage implements \ArrayAccess, \Countable, \Iterator
 
     public function offsetExists($offset)
     {
-        return $this->isset($offset);
+        return $this->has($offset);
     }
 
     public function offsetSet($offset, $value)
@@ -65,7 +65,7 @@ class ParameterStorage implements \ArrayAccess, \Countable, \Iterator
 
     public function offsetUnset($offset)
     {
-        $this->unset($offset);
+        $this->remove($offset);
     }
 
     public function rewind()
@@ -92,5 +92,4 @@ class ParameterStorage implements \ArrayAccess, \Countable, \Iterator
     {
         return false !== $this->current();
     }
-
 }

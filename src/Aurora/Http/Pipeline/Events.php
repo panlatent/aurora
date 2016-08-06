@@ -36,8 +36,8 @@ class Events extends EventAcceptor
 
     public function onAppend()
     {
-        $this->bind->data('client')->timestamp()->update(ServerTimestampType::RequestLast);
-        $buffer = $this->bind->buffer();
+        $this->bind->getData('client')->getTimestamp()->update(ServerTimestampType::RequestLast);
+        $buffer = $this->bind->getBuffer();
         if ( ! $this->firstLine) {
             if (false !== ($pos = $buffer->find("\r\n"))) {
                 $rawFirstLine = $buffer->pop($pos, 2);
@@ -73,13 +73,13 @@ class Events extends EventAcceptor
     public function onSend(Request $request)
     {
         if ( ! $request->isPermanenceConnection()) {
-            $this->bind->data('client')->declareClose();
+            $this->bind->getData('client')->declareClose();
         } else {
-            $this->bind->data('client')->setKeepAlive(true);
-            $this->bind->data('client')->writeBuffer()->flush();
+            $this->bind->getData('client')->setKeepAlive(true);
+            $this->bind->getData('client')->getWriteBuffer()->flush();
         }
 
-        $end = $this->bind->end();
+        $end = $this->bind->getEnd();
         if ( ! $end || ! is_object($end) || ! $end instanceof Response) {
             throw new InternalServerErrorException("pipeline end data is not a Aurora\\Http\\Response class object");
         }

@@ -48,7 +48,7 @@ class Client implements EventManageable, ConfigManageable, TimestampManageable
         $this->socket = $socket;
         $this->pipeline = $pipeline;
         $this->config = $config ?? $this->createConfig();
-        $this->timestamp = $worker->timestamp();
+        $this->timestamp = $worker->getTimestamp();
         $this->timestamp->mark(ServerTimestampType::ClientStart);
 
         $this->eventAcceptor = $this->createEventAcceptor();
@@ -61,22 +61,22 @@ class Client implements EventManageable, ConfigManageable, TimestampManageable
         $this->writeBuffer = $writeBuffer ?? $this->createWriteBuffer();
     }
 
-    public function worker()
+    public function getWorker()
     {
         $this->worker;
     }
 
-    public function socket()
+    public function getSocket()
     {
         return $this->socket;
     }
 
-    public function pipeline()
+    public function getPipeline()
     {
         return $this->pipeline;
     }
 
-    public function writeBuffer()
+    public function getWriteBuffer()
     {
         return $this->writeBuffer;
     }
@@ -86,8 +86,8 @@ class Client implements EventManageable, ConfigManageable, TimestampManageable
         if ($this->socket) {
             socket_close($this->socket);
         }
-        if ( ! $this->event->base()->gotStop()) {
-            $this->event->base()->stop();
+        if ( ! $this->event->getBase()->gotStop()) {
+            $this->event->stop();
         }
     }
 
@@ -96,7 +96,7 @@ class Client implements EventManageable, ConfigManageable, TimestampManageable
      */
     public function declareClose()
     {
-        if ( ! $this->writeBuffer->empty()) {
+        if ( ! $this->writeBuffer->isEmpty()) {
             $this->writeBuffer->flush();
         }
         $this->event->declare(function() {

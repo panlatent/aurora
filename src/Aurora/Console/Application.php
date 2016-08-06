@@ -23,7 +23,7 @@ class Application extends \Symfony\Component\Console\Application
      */
     protected $master;
 
-    public function config()
+    public function getConfig()
     {
         return $this->config;
     }
@@ -33,7 +33,7 @@ class Application extends \Symfony\Component\Console\Application
         $generator->send($this->master);
     }
 
-    public function master($callback)
+    public function setMaster($callback)
     {
         $this->master = $callback;
     }

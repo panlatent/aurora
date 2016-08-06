@@ -13,7 +13,7 @@ class Worker extends \Aurora\Worker
 {
     protected function createClient()
     {
-        $client = new Client($this, $this->event, $this->socket, $this->server->pipeline());
+        $client = new Client($this, $this->event, $this->socket, $this->server->getPipeline());
 
         return $client;
     }

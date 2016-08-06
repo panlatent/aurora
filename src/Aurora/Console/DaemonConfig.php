@@ -31,7 +31,7 @@ class DaemonConfig extends Config
 
     protected function register()
     {
-        if ($fileConfig = FileConfig::default()) {
+        if ($fileConfig = FileConfig::getDefault()) {
             $this->pid_file_save_path = $fileConfig->get('daemon.pid', '/var/run/aurora.pid');
             $masterUser = Utils::getUserGroupFromColonStyle($fileConfig->get('daemon.user', 'nobody:nobody'));
             $this->master_user = $masterUser['user'];

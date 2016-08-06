@@ -40,6 +40,25 @@ class Response implements Producible
         return new static($status, $version, $header, $body);
     }
 
+    public function getContent()
+    {
+        $firstLine = sprintf('%s %s', $this->version, $this->status);
+        if (empty($this->header['CONTENT_TYPE']))
+            $this->header['CONTENT_TYPE'] = 'text/html';
+        if (empty($this->header['CONTENT_LENGTH']))
+            $this->header['CONTENT_LENGTH'] = strlen($this->rawBody);
+
+//        $this->header['CONNECTION'] = 'keep-alive';
+
+        $rawHeader = '';
+        foreach ($this->header as $key => $value) {
+            $key = str_replace(' ', '-', ucwords(str_replace('_', ' ', strtolower($key))));
+            $rawHeader .= sprintf("%s: %s\r\n", $key, $value);
+        }
+
+        return sprintf("%s\r\n%s\r\n%s", $firstLine, $rawHeader, $this->rawBody);
+    }
+
     public function redirect($url)
     {
         $this->status = '302 Temporarily Moved';
@@ -80,20 +99,4 @@ class Response implements Producible
         return $this;
     }
 
-    public function getContent()
-    {
-        $firstLine = sprintf('%s %s', $this->version, $this->status);
-        if (empty($this->header['CONTENT_TYPE']))
-            $header['CONTENT_TYPE'] = 'text/html';
-        if (empty($this->header['CONTENT_LENGTH']))
-            $header['CONTENT_LENGTH'] = strlen($this->rawBody);
-
-        $rawHeader = '';
-        foreach ($this->header as $key => $value) {
-            $key = str_replace(' ', '-', ucwords(str_replace('_', ' ', strtolower($key))));
-            $rawHeader .= sprintf("%s: %s\r\n", $key, $value);
-        }
-
-        return sprintf("%s\r\n%s\r\n%s", $firstLine, $rawHeader, $this->rawBody);
-    }
 }

@@ -11,5 +11,12 @@ namespace Aurora\Http;
 
 class Resource
 {
+    protected $uri;
+
+    protected $root;
+
+    public function __construct()
+    {
+    }
 
 }

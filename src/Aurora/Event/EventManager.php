@@ -24,7 +24,7 @@ trait EventManager
     /**
      * @return \Aurora\Event\Dispatcher
      */
-    public function event()
+    public function getEvent()
     {
         return $this->event;
     }
@@ -32,7 +32,7 @@ trait EventManager
     /**
      * @return \Aurora\Event\EventAcceptor
      */
-    public function eventAcceptor()
+    public function getEventAcceptor()
     {
         return $this->eventAcceptor;
     }

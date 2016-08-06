@@ -23,7 +23,7 @@ class PriorityList implements \Countable, \Iterator
         return $this->storage->count();
     }
 
-    public function empty()
+    public function isEmpty()
     {
         return $this->storage->isEmpty();
     }

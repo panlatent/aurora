@@ -18,40 +18,6 @@ class TimestampMarker
 
     }
 
-    public function isset($name)
-    {
-        return isset($this->marks[$name]);
-    }
-
-    public function get($name, $default = 0)
-    {
-        if ( ! $this->isset($name)) return $default;
-
-        return $this->marks[$name];
-    }
-
-    public function mark($name, $microsecond = 0)
-    {
-        if ( ! $microsecond) $microsecond = microtime(true);
-
-        $this->marks[$name] = $microsecond;
-    }
-
-    public function update($name)
-    {
-        $this->marks[$name] = microtime(true);
-    }
-
-    public function unset($name)
-    {
-        unset($this->marks[$name]);
-    }
-
-    public function clear()
-    {
-        $this->marks = [];
-    }
-
     public static function interval($timestamp, $now = 0)
     {
         if ( ! $now) $now = microtime(true);
@@ -68,4 +34,40 @@ class TimestampMarker
     {
         return ($interval >= $min - $mistake && $interval <= $max + $mistake);
     }
+
+    public function has($name)
+    {
+        return isset($this->marks[$name]);
+    }
+
+    public function get($name, $default = 0)
+    {
+        if ( ! $this->has($name)) return $default;
+
+        return $this->marks[$name];
+    }
+
+    public function mark($name, $microsecond = 0)
+    {
+        if ( ! $microsecond) $microsecond = microtime(true);
+
+        $this->marks[$name] = $microsecond;
+    }
+
+    public function update($name)
+    {
+        $this->marks[$name] = microtime(true);
+    }
+
+    public function remove($name)
+    {
+        unset($this->marks[$name]);
+    }
+
+    public function clear()
+    {
+        $this->marks = [];
+    }
+
+
 }

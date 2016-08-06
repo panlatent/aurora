@@ -76,6 +76,23 @@ class Daemon implements ConfigManageable
         return posix_kill($pid, SIGTERM);
     }
 
+
+    public function reload()
+    {
+        // @todo
+    }
+
+    public function status()
+    {
+        if (false === ($pid = $this->getServerPid())) {
+            return false;
+        } elseif ( ! posix_kill($pid, 0)) {
+            return false;
+        }
+
+        return $this->getServerStatus($pid);
+    }
+
     protected function getServerPid()
     {
         static $cachePid = null;
@@ -105,22 +122,6 @@ class Daemon implements ConfigManageable
         return ($cachePid = (int)$pid);
     }
 
-    public function reload()
-    {
-        // @todo
-    }
-
-    public function status()
-    {
-        if (false === ($pid = $this->getServerPid())) {
-            return false;
-        } elseif ( ! posix_kill($pid, 0)) {
-            return false;
-        }
-
-        return $this->getServerStatus($pid);
-    }
-
     protected function getServerStatus($pid)
     {
         // @todo
@@ -128,7 +129,7 @@ class Daemon implements ConfigManageable
         return ['pid' => $pid];
     }
 
-    public function closeStdDescriptors()
+    protected function closeStdDescriptors()
     {
         fclose(STDOUT);
         fclose(STDIN);

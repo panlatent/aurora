@@ -81,7 +81,7 @@ class Request implements Producible
             $rawHeader = substr($rawHttpRequest, $firstLinePos + 2, $rawHeaderEndPos - $firstLinePos - 2);
             $header = Header::factory($rawHeader);
 
-            $httpContentLength =  $header->header('HTTP_CONTENT_LENGTH', null);
+            $httpContentLength =  $header->getHeader('HTTP_CONTENT_LENGTH', null);
             if ( ! $firstLine->isEmptyBody()) {
                 $rawBody = substr($rawHttpRequest, $rawHeaderEndPos + 4, $httpContentLength);
             } else {
@@ -96,27 +96,27 @@ class Request implements Producible
         return new static($firstLine, $header, null, null, null, null, $rawBody);
     }
 
-    public function method()
+    public function getMethod()
     {
-        return $this->firstLine->method();
+        return $this->firstLine->getMethod();
     }
 
-    public function url()
+    public function getUrl()
     {
-        return $this->firstLine->uri();
+        return $this->firstLine->getUrl();
     }
 
-    public function uri()
+    public function getUri()
     {
-        return $this->firstLine->uri();
+        return $this->firstLine->getUri();
     }
 
-    public function version($onlyNumber = false)
+    public function getVersion($onlyNumber = false)
     {
-        return $this->firstLine->version($onlyNumber);
+        return $this->firstLine->getVersion($onlyNumber);
     }
 
-    public function query($name = null)
+    public function getQuery($name = null)
     {
         if (null === $name) {
             return $this->query;
@@ -125,7 +125,7 @@ class Request implements Producible
         return $this->query[$name] ?? null;
     }
 
-    public function server($name = null)
+    public function getServer($name = null)
     {
         if (null === $name) {
             return $this->server;
@@ -134,34 +134,34 @@ class Request implements Producible
         return $this->server[$name] ?? null;
     }
 
-    public function header($name, $default = false)
+    public function getHeader($name, $default = false)
     {
         return $this->header->get($name, $default);
     }
 
-    public function headers()
+    public function getHeaders()
     {
         return $this->header;
     }
 
-    public function post($name)
+    public function getPost($name)
     {
         return $this->post[$name];
     }
 
-    public function posts()
+    public function getPosts()
     {
         return $this->post;
     }
 
-    public function rawBody()
+    public function getRawBody()
     {
         return $this->rawBody;
     }
 
     public function isPermanenceConnection()
     {
-        $version = $this->firstLine->version(true);
+        $version = $this->firstLine->getVersion(true);
         if (version_compare($version, '1.0', '<=')) {
             return ('keep-alive' === $this->header->get('HTTP_CONNECTION', false));
         } else {
@@ -174,7 +174,7 @@ class Request implements Producible
         if ($this->firstLine->isEmptyBody()) {
             $this->post = new ParameterStorage();
         } else {
-            $contentType = $this->header->headerValue('HTTP_CONTENT_TYPE', 'text/plain');
+            $contentType = $this->header->getHeaderValue('HTTP_CONTENT_TYPE', 'text/plain');
             switch ($contentType) {
                 case 'application/json':
                     $post = json_decode($this->rawBody);
@@ -204,7 +204,7 @@ class Request implements Producible
     protected function parseQuery()
     {
         $query = [];
-        if ($rawQuery = $this->firstLine->query()) {
+        if ($rawQuery = $this->firstLine->getQuery()) {
             parse_str($rawQuery, $query);
         }
 

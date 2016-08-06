@@ -9,7 +9,7 @@
 
 namespace Aurora\Event;
 
-class Container implements \Countable
+class Container
 {
     /**
      * @var int
@@ -46,12 +46,12 @@ class Container implements \Countable
         return $this->storage[$name];
     }
 
-    public function isset($name)
+    public function has($name)
     {
         return isset($this->storage[$name]);
     }
 
-    public function issetSub($name, $object)
+    public function hasSub($name, $object)
     {
         if ( ! isset($this->storage[$name])) {
             return false;
@@ -60,13 +60,13 @@ class Container implements \Countable
         return $this->storage[$name]->contains($object);
     }
 
-    public function unset($name)
+    public function remove($name)
     {
         $this->count -= count($this->storage[$name]);
         unset($this->storage[$name]);
     }
 
-    public function unsetSub($name, $object)
+    public function removeSub($name, $object)
     {
         /** @var \SplObjectStorage $objectStorage */
         $objectStorage = $this->storage[$name];

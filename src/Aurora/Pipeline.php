@@ -57,6 +57,31 @@ class Pipeline implements EventAcceptable, EventManageable
         $this->buffer = new Buffer();
     }
 
+    public function getNext()
+    {
+        return $this->next;
+    }
+
+    public function getBuffer()
+    {
+        return $this->buffer;
+    }
+
+    public function getData($name)
+    {
+        return $this->data[$name];
+    }
+
+    public function getEnd()
+    {
+        return $this->end;
+    }
+
+    public function getStatus()
+    {
+        return ! $this->closed;
+    }
+
     /**
      * Create a pipeline processor.
      *
@@ -84,7 +109,7 @@ class Pipeline implements EventAcceptable, EventManageable
             $this->next = $pipe;
         } else {
             $next = $this->next;
-            while ($afterNext = $next->next()) {
+            while ($afterNext = $next->getNext()) {
                 $next = $afterNext;
             }
 
@@ -92,11 +117,6 @@ class Pipeline implements EventAcceptable, EventManageable
         }
 
         return $this;
-    }
-
-    public function next()
-    {
-        return $this->next;
     }
 
     public function open()
@@ -123,26 +143,6 @@ class Pipeline implements EventAcceptable, EventManageable
         $this->end = null;
 
         return $this;
-    }
-
-    public function buffer()
-    {
-        return $this->buffer;
-    }
-
-    public function data($name)
-    {
-        return $this->data[$name];
-    }
-
-    public function end()
-    {
-        return $this->end;
-    }
-
-    public function status()
-    {
-        return ! $this->closed;
     }
 
     public function send($length = null)

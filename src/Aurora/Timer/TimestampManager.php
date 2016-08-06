@@ -19,7 +19,7 @@ trait TimestampManager
     /**
      * @return \Aurora\Timer\TimestampMarker
      */
-    public function timestamp()
+    public function getTimestamp()
     {
         return $this->timestamp;
     }

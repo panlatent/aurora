@@ -38,7 +38,7 @@ class Command extends \Symfony\Component\Console\Command\Command
         /** @var \Aurora\Console\Application $app */
         $app = $this->getApplication();
 
-        if ( ! ($config = $app->config())) {
+        if ( ! ($config = $app->getConfig())) {
             $configPath = $this->getAuroraConfigPath($input->getOption('config'));
             if ( ! is_file($configPath)) {
                 throw new Exception("Could not find the configuration file: $configPath");

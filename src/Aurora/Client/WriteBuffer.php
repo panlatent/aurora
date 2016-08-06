@@ -40,29 +40,29 @@ class WriteBuffer implements EventAcceptable
         $this->event->bind(static::EVENT_BUFFER_SEND, $this);
     }
 
-    public function content()
+    public function getContent()
     {
         return $this->buffer;
     }
 
-    public function empty()
-    {
-        return '' === $this->buffer;
-    }
-
-    public function length()
+    public function getLength()
     {
         return strlen($this->buffer);
     }
 
-    public function size()
+    public function getSize()
     {
         return $this->size;
     }
 
-    public function status()
+    public function getStatus()
     {
         return $this->status;
+    }
+
+    public function isEmpty()
+    {
+        return '' === $this->buffer;
     }
 
     public function open()
@@ -120,17 +120,6 @@ class WriteBuffer implements EventAcceptable
         }
     }
 
-    public function out($length = self::OUT_LENGTH)
-    {
-        while (strlen($this->buffer)) {
-            $content = substr($this->buffer, 0, $length);
-            $this->buffer = substr($this->buffer, $length);
-            $this->size = strlen($this->buffer);
-
-            yield $content;
-        }
-    }
-
     public function setSize($size)
     {
         $this->size = $size;
@@ -141,7 +130,7 @@ class WriteBuffer implements EventAcceptable
         socket_write($socket, $this->buffer);
         $this->clear();
         $listener->delete();
-        $this->event->free($listener->name(), $listener, true);
+        $this->event->free($listener->getName(), $listener, true);
     }
 
 }

@@ -36,7 +36,7 @@ class WorkerManager
     {
         /** @var \Aurora\Worker $worker */
         foreach ($this->workers as $worker) {
-            if ($pid == $worker->pid()) {
+            if ($pid == $worker->getPid()) {
                 $this->workers->detach($worker);
                 break;
             }
@@ -45,7 +45,7 @@ class WorkerManager
 
     public function kill(Worker $worker)
     {
-        posix_kill($worker->pid(), SIGKILL);
+        posix_kill($worker->getPid(), SIGKILL);
         $this->workers->detach($worker);
     }
 
@@ -53,7 +53,7 @@ class WorkerManager
     {
         /** @var \Aurora\Worker $worker */
         foreach ($this->workers as $worker) {
-            posix_kill($worker->pid(), SIGKILL);
+            posix_kill($worker->getPid(), SIGKILL);
         }
     }
 

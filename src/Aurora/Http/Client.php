@@ -29,7 +29,7 @@ class Client extends \Aurora\Client
         $this->writeBuffer->open();
     }
 
-    public function keepAlive()
+    public function getKeepAlive()
     {
         return $this->keepAlive;
     }

@@ -11,7 +11,7 @@ namespace Aurora\Config;
 
 interface ConfigManageable
 {
-    public function config();
+    public function getConfig();
 
     public function setConfig(Configurable $config);
 }
