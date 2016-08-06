@@ -1,4 +1,5 @@
 /.idea/
+/.vagrant/
 /vendor/
 composer.lock
 .aurora.ini
