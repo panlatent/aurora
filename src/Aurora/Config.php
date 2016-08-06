@@ -18,19 +18,23 @@ abstract class Config implements Configurable
         $this->register();
     }
 
-    public function get($name, $default = false)
+    final public function get($name, $default = false)
     {
         if ( ! isset($this->$name)) return $default;
 
         return $this->$name;
     }
 
-    public function __set($name, $value)
+    final public function __set($name, $value)
     {
+        if ( ! isset($this->$name)) {
+            throw new Exception("cannot set a unknown attribute");
+        }
+
         $this->$name = $value;
     }
 
-    public function __invoke($name)
+    final public function __invoke($name)
     {
         return $this->$name;
     }
