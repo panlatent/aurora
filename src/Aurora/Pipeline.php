@@ -47,6 +47,11 @@ class Pipeline implements EventAcceptable, EventManageable
      */
     protected $sections = [];
 
+    /**
+     * @var mixed
+     */
+    protected $end;
+
     public function __construct()
     {
         $this->buffer = new Buffer();
@@ -111,7 +116,11 @@ class Pipeline implements EventAcceptable, EventManageable
 
     public function close()
     {
-        if ( ! $this->closed) $this->closed = true;
+        if ($this->closed)  {
+            throw new Exception("Pipeline has been closed");
+        }
+        $this->closed = true;
+        $this->end = null;
 
         return $this;
     }
@@ -124,6 +133,16 @@ class Pipeline implements EventAcceptable, EventManageable
     public function data($name)
     {
         return $this->data[$name];
+    }
+
+    public function end()
+    {
+        return $this->end;
+    }
+
+    public function status()
+    {
+        return ! $this->closed;
     }
 
     public function send($length = null)
@@ -161,6 +180,8 @@ class Pipeline implements EventAcceptable, EventManageable
                 }
             }
         }
+
+        $this->end = $content;
 
         if ( ! $this->closed && $this->next) {
             foreach ($this->data as $item => $value) {

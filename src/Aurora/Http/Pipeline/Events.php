@@ -13,6 +13,8 @@ use Aurora\Event\EventAcceptor;
 use Aurora\Http\Request;
 use Aurora\Http\Request\FirstLine;
 use Aurora\Http\Request\Header as HttpHeader;
+use Aurora\Http\Response;
+use Aurora\Http\Server\Exception\InternalServerErrorException;
 use Aurora\Http\ServerTimestampType;
 
 class Events extends EventAcceptor
@@ -75,6 +77,11 @@ class Events extends EventAcceptor
         } else {
             $this->bind->data('client')->setKeepAlive(true);
             $this->bind->data('client')->writeBuffer()->flush();
+        }
+
+        $end = $this->bind->end();
+        if ( ! $end || ! is_object($end) || ! $end instanceof Response) {
+            throw new InternalServerErrorException("pipeline end data is not a Aurora\\Http\\Response class object");
         }
     }
 
