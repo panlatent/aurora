@@ -13,7 +13,7 @@ use Aurora\Http\Response;
 use Aurora\Http\Server;
 use Aurora\Support\Utils;
 
-/** @var \Aurora\Console\Config $config */
+/** @var \Aurora\Config\FileConfig $config */
 $server = new Server();
 $listens = Utils::listens($config->get('bind.listen', '127.0.0.1:10042'));
 foreach ($listens as $listen) {
@@ -23,8 +23,9 @@ $server->listen();
 
 $pipeline = Server::createMatchPipeline();
 $pipeline->pipe(function(Request $request) {
+    $uri = $request->uri() != '/' ? $request->uri() : '/index.html';
     ob_start();
-    require __DIR__ . '/../htdocs/index.php';
+    include __DIR__ . '/../htdocs' . $uri;
     return ob_get_clean();
 });
 $pipeline->pipe(function() {
