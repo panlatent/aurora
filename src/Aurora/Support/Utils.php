@@ -11,7 +11,7 @@ namespace Aurora\Support;
 
 class Utils
 {
-    public static function listens($content)
+    public static function getSocketBindsFormColonStyle($content)
     {
         if ( ! preg_match_all('#([\d.]+):(\d+)#', $content, $match)) {
             return false;

@@ -8,8 +8,48 @@
  * @license https://opensource.org/licenses/MIT
  */
 
+use Aurora\Aurora;
+use Aurora\Console\Application;
+use Aurora\Console\Command\ServerRestart;
+use Aurora\Console\Command\ServerStart;
+use Aurora\Console\Command\ServerStatus;
+use Aurora\Console\Command\ServerStop;
+
 require __DIR__ . '/../vendor/autoload.php';
 
-require __DIR__ . '/../includes/environment.php';
-require __DIR__ . '/../includes/constants.php';
-require __DIR__ . '/../includes/console.php';
+defined('AURORA_DAEMON') or define('AURORA_DAEMON', true);
+defined('AURORA_OS') or define('AURORA_OS', Aurora::os());
+defined('AURORA_ROOT') or define('AURORA_ROOT', realpath(__DIR__ . '/../') . DIRECTORY_SEPARATOR);
+defined('AURORA_PWD') or define('AURORA_PWD', getcwd() . DIRECTORY_SEPARATOR);
+defined('AURORA_INI') or define('AURORA_INI', Aurora::INI);
+defined('AURORA_VERSION') or define('AURORA_VERSION', Aurora::VERSION);
+
+if (version_compare(PHP_VERSION, '7.0.0', '<')) {
+    die("PHP version can not be lower than 7.0\n");
+} elseif ('cli' != php_sapi_name()) {
+    die("Only run in PHP CLI environment\n");
+}
+
+$extensions = get_loaded_extensions();
+foreach (Aurora::EXTENSIONS as $extension) {
+    if ( ! in_array($extension, $extensions)) {
+        die("This package require $extension extension\n");
+    }
+}
+
+error_reporting(E_ALL);
+//set_error_handler('Aurora\Exception\Manager::throwErrorExceptionHandler', E_ALL);
+//set_exception_handler('Aurora\Exception\Manager::throwErrorExceptionHandler');
+
+$application = new Application(Aurora::NAME, Aurora::VERSION);
+$application->addCommands([
+    new ServerStart(),
+    new ServerStop(),
+    new ServerStatus(),
+    new ServerRestart(),
+]);
+$application->master(function ($config) {
+    $server = require __DIR__ . '/../httpd/server.php';
+    $server->start();
+});
+$application->run();

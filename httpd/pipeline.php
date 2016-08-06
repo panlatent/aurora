@@ -11,15 +11,6 @@ use Aurora\Http\Pipeline;
 use Aurora\Http\Request;
 use Aurora\Http\Response;
 use Aurora\Http\Server;
-use Aurora\Support\Utils;
-
-/** @var \Aurora\Config\FileConfig $config */
-$server = new Server();
-$listens = Utils::listens($config->get('bind.listen', '127.0.0.1:10042'));
-foreach ($listens as $listen) {
-    $server->bind($listen['address'], $listen['port']);
-}
-$server->listen();
 
 $pipeline = Server::createMatchPipeline();
 $pipeline->pipe(function(Request $request) {
@@ -37,5 +28,4 @@ $pipeline->pipe(function(Response $response, Pipeline $pipe) {
     $pipe->data('client')->send($response->getContent());
 });
 
-$server->setPipeline($pipeline);
-$server->start();
+return $pipeline;
