@@ -27,19 +27,15 @@ class ServerStart extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        try {
-            parent::execute($input, $output);
-            if (false !== ($status = $this->daemon->status())) {
-                throw new Exception("Error: Aurora is already working! Master Process PID:[{$status['pid']}]");
-            }
-
-            /** @var \Aurora\Console\Application $application */
-            $application = $this->getApplication();
-            $application->do($this->daemon->start());
-            $output->writeln('<info>Aurora is working!</info>');
-        } catch (\Exception $e) {
-            $output->writeln('<error>' . $e->getMessage() . '</error>');
+        parent::execute($input, $output);
+        if (false !== ($status = $this->daemon->status())) {
+            throw new Exception("Error: Aurora is already working! Master Process PID:[{$status['pid']}]");
         }
+
+        /** @var \Aurora\Console\Application $application */
+        $application = $this->getApplication();
+        $application->do($this->daemon->start());
+        $output->writeln('<info>Aurora is working!</info>');
     }
 
 }

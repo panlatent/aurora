@@ -27,18 +27,14 @@ class ServerStop extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        try {
-            parent::execute($input, $output);
-            if (false === ($status = $this->daemon->status())) {
-                throw new Exception("Error: Aurora is not working!");
-            }
-            if ( ! $this->daemon->stop()) {
-                throw new Exception("Error: Unable to make Aurora stop working!");
-            }
-            $output->writeln('<warning>Aurora has stopped working!</warning>');
-        } catch (\Exception $e) {
-            $output->writeln('<error>' . $e->getMessage() . '</error>');
+        parent::execute($input, $output);
+        if (false === ($status = $this->daemon->status())) {
+            throw new Exception("Error: Aurora is not working!");
         }
+        if ( ! $this->daemon->stop()) {
+            throw new Exception("Error: Unable to make Aurora stop working!");
+        }
+        $output->writeln('<warning>Aurora has stopped working!</warning>');
     }
 
 }

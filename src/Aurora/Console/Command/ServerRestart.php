@@ -27,23 +27,19 @@ class ServerRestart extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        try {
-            parent::execute($input, $output);
+        parent::execute($input, $output);
 
-            if (false !== $this->daemon->status()) {
-                if ( ! $this->daemon->stop()) {
-                    throw new Exception("Error: Unable to make Aurora stop working!");
-                }
-                $output->writeln('<warning>Aurora has stopped working!</warning>');
+        if (false !== $this->daemon->status()) {
+            if ( ! $this->daemon->stop()) {
+                throw new Exception("Error: Unable to make Aurora stop working!");
             }
-
-            /** @var \Aurora\Console\Application $application */
-            $application = $this->getApplication();
-            $application->do($this->daemon->start());
-            $output->writeln('<info>Aurora is working!</info>');
-        } catch (\Exception $e) {
-            $output->writeln('<error>' . $e->getMessage() . '</error>');
+            $output->writeln('<warning>Aurora has stopped working!</warning>');
         }
+
+        /** @var \Aurora\Console\Application $application */
+        $application = $this->getApplication();
+        $application->do($this->daemon->start());
+        $output->writeln('<info>Aurora is working!</info>');
     }
 
 }

@@ -26,15 +26,11 @@ class ServerStatus extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        try {
-            parent::execute($input, $output);
-            if (($status = $this->daemon->status())) {
-                $output->writeln("<info>Aurora is working! Master Process PID:[{$status['pid']}]</info>");
-            } else {
-                $output->writeln('<warning>Aurora has stopped working!</warning>');
-            }
-        } catch (\Exception $e) {
-            $output->writeln('<error>' . $e->getMessage() . '</error>');
+        parent::execute($input, $output);
+        if (($status = $this->daemon->status())) {
+            $output->writeln("<info>Aurora is working! Master Process PID:[{$status['pid']}]</info>");
+        } else {
+            $output->writeln('<warning>Aurora has stopped working!</warning>');
         }
     }
 
