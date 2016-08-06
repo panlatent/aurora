@@ -7,10 +7,13 @@
  * @license https://opensource.org/licenses/MIT
  */
 
-namespace Aurora\Http;
+namespace Aurora\Http\Server\Exception;
 
-class Exception extends \Aurora\Exception
+use Aurora\Http\Server\Exception;
+
+class BadGatewayException extends Exception
 {
-    protected $statusCode;
-    protected $statusMessage;
+    protected $statusCode = 502;
+
+    protected $statusMessage = 'Bad Gateway';
 }

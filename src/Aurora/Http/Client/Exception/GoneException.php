@@ -7,10 +7,13 @@
  * @license https://opensource.org/licenses/MIT
  */
 
-namespace Aurora\Http;
+namespace Aurora\Http\Client\Exception;
 
-class Exception extends \Aurora\Exception
+use Aurora\Http\Client\Exception;
+
+class GoneException extends Exception
 {
-    protected $statusCode;
-    protected $statusMessage;
-}
+    protected $statusCode = 410;
+
+    protected $statusMessage = 'Gone';
+} 

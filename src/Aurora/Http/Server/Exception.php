@@ -7,10 +7,9 @@
  * @license https://opensource.org/licenses/MIT
  */
 
-namespace Aurora\Http;
+namespace Aurora\Http\Server;
 
-class Exception extends \Aurora\Exception
+abstract class Exception extends \Aurora\Http\Exception
 {
-    protected $statusCode;
-    protected $statusMessage;
+
 }

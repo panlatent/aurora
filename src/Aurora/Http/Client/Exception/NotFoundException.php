@@ -7,10 +7,13 @@
  * @license https://opensource.org/licenses/MIT
  */
 
-namespace Aurora\Http;
+namespace Aurora\Http\Client\Exception;
 
-class Exception extends \Aurora\Exception
+use Aurora\Http\Client\Exception;
+
+class NotFoundException extends Exception
 {
-    protected $statusCode;
-    protected $statusMessage;
-}
+    protected $statusCode = 404;
+
+    protected $statusMessage = 'Not Found';
+} 
