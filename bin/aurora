@@ -1,4 +1,4 @@
-#!/usr/bin/php70
+#!/usr/bin/php7
 <?php
 /**
  * Aurora - A HTTP Application Server of PHP Script
