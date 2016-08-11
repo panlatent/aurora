@@ -6,7 +6,7 @@ php:
 sudo: false
 
 install:
-  - pecl install event -q
+  - cho -e "\n" | pecl install event
   - travis_retry composer install --no-interaction --prefer-source
 
 script:
